@@ -330,6 +330,4 @@ export class DestinationController {
     }));
     return responseDtos;
   }
-
-  // Add other GET endpoints here later (e.g., get all, get by ID)
 }
