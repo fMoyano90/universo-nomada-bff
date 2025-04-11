@@ -12,11 +12,7 @@ import { Exclude } from './exclude.entity';
 import { Tip } from './tip.entity';
 import { Faq } from './faq.entity';
 import { GalleryImage } from './gallery-image.entity';
-
-export enum DestinationType {
-  NACIONAL = 'nacional',
-  INTERNACIONAL = 'internacional',
-}
+import { DestinationType } from '../enums/destination-type.enum'; // Import the shared enum
 
 @Entity('destinations')
 export class Destination {
@@ -25,6 +21,9 @@ export class Destination {
 
   @Column({ length: 255 })
   title: string;
+
+  @Column({ length: 255, unique: true })
+  slug: string;
 
   @Column({ type: 'text', name: 'image_src' })
   imageSrc: string;

@@ -59,7 +59,7 @@ export class AuthService {
     }
 
     // Remove sensitive information
-    const { passwordHash: _, ...result } = user;
+    const { passwordHash: _, ...result } = user; // Corrected property name
     return result;
   }
 
@@ -143,7 +143,7 @@ export class AuthService {
       }
 
       // Generate new tokens
-      const { passwordHash: _, ...userData } = user;
+      const { passwordHash: _, ...userData } = user; // Corrected property name
       return this.login(userData);
     } catch (error) {
       this.logger.error(`Token refresh failed: ${error.message}`);

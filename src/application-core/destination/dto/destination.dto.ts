@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger'; // Import PartialType
 import {
   IsString,
   IsNotEmpty,
@@ -14,7 +14,7 @@ import {
   MaxLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { DestinationType } from '../../../infrastructure/database/entities/destination.entity'; // Adjust path as needed
+import { DestinationType } from '../../../infrastructure/database/enums/destination-type.enum'; // Correct path
 
 // --- Nested DTOs for related entities ---
 
@@ -97,6 +97,12 @@ export class CreateDestinationRequestDTO {
   @IsNotEmpty()
   @MaxLength(255)
   title: string;
+
+  @ApiProperty({ description: 'URL-friendly slug for the destination' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  slug: string;
 
   @ApiProperty({ description: 'URL of the main image for the destination' })
   @IsUrl() // Assuming it's a URL, adjust if it's a path or needs file upload handling
@@ -232,6 +238,13 @@ export class CreateDestinationRequestDTO {
   galleryImages?: GalleryImageDTO[];
 }
 
+// --- Update Destination DTO ---
+// --- Update Destination DTO ---
+// Use PartialType to make all properties of CreateDestinationRequestDTO optional
+export class UpdateDestinationRequestDTO extends PartialType(
+  CreateDestinationRequestDTO,
+) {}
+
 // --- Response DTO (Example - adjust as needed) ---
 // You might want a specific response DTO after creation
 export class DestinationResponseDTO extends CreateDestinationRequestDTO {
@@ -243,4 +256,43 @@ export class DestinationResponseDTO extends CreateDestinationRequestDTO {
 
   @ApiProperty()
   updatedAt: Date;
+}
+
+// --- Pagination Meta DTO ---
+class PaginationMetaDTO {
+  @ApiProperty({ description: 'Total number of items available' })
+  @IsNumber()
+  total: number;
+
+  @ApiProperty({ description: 'Number of items per page' })
+  @IsNumber()
+  limit: number;
+
+  @ApiProperty({ description: 'Current page number' })
+  @IsNumber()
+  page: number;
+
+  @ApiProperty({ description: 'Total number of pages' })
+  @IsNumber()
+  totalPages: number;
+}
+
+// --- Paginated Destinations Response DTO ---
+export class PaginatedDestinationsResponseDTO {
+  @ApiProperty({
+    type: [DestinationResponseDTO],
+    description: 'Array of destination data for the current page',
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => DestinationResponseDTO)
+  data: DestinationResponseDTO[];
+
+  @ApiProperty({
+    type: PaginationMetaDTO,
+    description: 'Pagination metadata',
+  })
+  @ValidateNested()
+  @Type(() => PaginationMetaDTO)
+  meta: PaginationMetaDTO;
 }

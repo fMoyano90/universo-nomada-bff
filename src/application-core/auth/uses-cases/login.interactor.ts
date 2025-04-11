@@ -18,13 +18,13 @@ export class AuthInteractor {
     if (!user) {
       throw new UnauthorizedException('Contraseña o usuario invalido');
     }
+
     const passwordValid = await bcrypt.compare(pass, user.passwordHash);
     if (!passwordValid) {
-      throw new UnauthorizedException('Contraseña o usuario invalido');
+      throw new UnauthorizedException('Invalid credentials');
     }
-    // Return user data without the hash
-    const { passwordHash: _, ...result } = user;
-    return result;
+    delete user.passwordHash;
+    return user;
   }
 
   // This login method seems different from AuthService.login.
