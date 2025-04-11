@@ -1,0 +1,39 @@
+{
+  "welcome": "Welcome to SafeCheck",
+  "errors": {
+    "not_found": "Not found",
+    "unauthorized": "Unauthorized",
+    "bad_request": "Bad request",
+    "internal_server_error": "Internal server error",
+    "database_error": "Database operation failed",
+    "duplicate_entry": "A record with this data already exists",
+    "foreign_key_violation": "Referenced record does not exist",
+    "validation": {
+      "invalid_email": "Email is not valid",
+      "required_field": "Required field",
+      "invalid_password": "Password must be at least 8 characters long, including uppercase, lowercase and a number"
+    }
+  },
+  "auth": {
+    "login_success": "Login successful",
+    "logout_success": "Logout successful",
+    "invalid_credentials": "Invalid credentials",
+    "account_locked": "Account locked",
+    "account_inactive": "Account inactive"
+  },
+  "user": {
+    "created": "User created successfully",
+    "updated": "User updated successfully",
+    "deleted": "User deleted successfully",
+    "not_found": "User not found",
+    "already_exists": "A user with this email already exists"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "back": "Back"
+  }
+} 

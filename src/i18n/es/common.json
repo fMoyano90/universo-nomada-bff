@@ -1,0 +1,39 @@
+{
+  "welcome": "Bienvenido a SafeCheck",
+  "errors": {
+    "not_found": "No encontrado",
+    "unauthorized": "No autorizado",
+    "bad_request": "Solicitud incorrecta",
+    "internal_server_error": "Error interno del servidor",
+    "database_error": "Error en la operación de base de datos",
+    "duplicate_entry": "Ya existe un registro con estos datos",
+    "foreign_key_violation": "El registro referenciado no existe",
+    "validation": {
+      "invalid_email": "El correo electrónico no es válido",
+      "required_field": "Campo requerido",
+      "invalid_password": "La contraseña debe tener al menos 8 caracteres, incluyendo una mayúscula, una minúscula y un número"
+    }
+  },
+  "auth": {
+    "login_success": "Inicio de sesión exitoso",
+    "logout_success": "Cierre de sesión exitoso",
+    "invalid_credentials": "Credenciales inválidas",
+    "account_locked": "Cuenta bloqueada",
+    "account_inactive": "Cuenta inactiva"
+  },
+  "user": {
+    "created": "Usuario creado exitosamente",
+    "updated": "Usuario actualizado exitosamente",
+    "deleted": "Usuario eliminado exitosamente",
+    "not_found": "Usuario no encontrado",
+    "already_exists": "Ya existe un usuario con este correo electrónico"
+  },
+  "actions": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "confirm": "Confirmar",
+    "back": "Volver"
+  }
+} 
