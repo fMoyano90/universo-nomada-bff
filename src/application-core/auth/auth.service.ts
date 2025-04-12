@@ -59,7 +59,7 @@ export class AuthService {
     }
 
     // Remove sensitive information
-    const { passwordHash: _, ...result } = user; // Corrected property name
+    const { passwordHash: _, ...result } = user;
     return result;
   }
 

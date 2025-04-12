@@ -6,7 +6,7 @@ import { BookingParticipant } from '../../infrastructure/database/entities/booki
 import { GetPaginatedBookingsInteractor } from './uses-cases/get-paginated-bookings.interactor';
 import { GetBookingByIdInteractor } from './uses-cases/get-booking-by-id.interactor';
 import { UpdateBookingStatusInteractor } from './uses-cases/update-booking-status.interactor';
-import { BookingController } from '../../user-interface/controllers/booking.controller';
+import { BookingGateway } from '../../infrastructure/database/gateways/booking.gateway';
 
 @Module({
   imports: [
@@ -14,11 +14,12 @@ import { BookingController } from '../../user-interface/controllers/booking.cont
     TypeOrmModule.forFeature([Booking, BookingParticipant]),
   ],
   providers: [
+    BookingGateway,
     GetPaginatedBookingsInteractor,
     GetBookingByIdInteractor,
     UpdateBookingStatusInteractor,
   ],
-  controllers: [BookingController],
+  controllers: [],
   exports: [
     GetPaginatedBookingsInteractor,
     GetBookingByIdInteractor,

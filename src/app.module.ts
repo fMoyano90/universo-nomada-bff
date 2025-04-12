@@ -11,6 +11,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { InfrastructureModule } from './infrastructure/infrastructure.module';
 import { ApplicationCoreModule } from './application-core/application-core.module';
 import { DestinationModule } from './application-core/destination/destination.module'; // Import DestinationModule
+import { SliderModule } from './application-core/slider/slider.module'; // Import SliderModule
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
@@ -19,6 +20,7 @@ import { RolesGuard } from './application-core/auth/guards/roles.guard';
 import { validate } from './common/validation/env.validation';
 import { I18nInterceptor } from './infrastructure/i18n/i18n.interceptor';
 import { TranslationService } from './infrastructure/i18n/translation.service';
+import { AuthModule } from './application-core/auth/auth.module';
 
 @Module({
   imports: [
@@ -59,7 +61,9 @@ import { TranslationService } from './infrastructure/i18n/translation.service';
     InfrastructureModule,
     ApplicationCoreModule, // Contains UserModule, AuthModule, etc.
     DestinationModule, // Add DestinationModule here
+    SliderModule, // Add SliderModule here
     UserInterfaceModule,
+    AuthModule,
   ],
   providers: [
     // Guardia global para proteger todas las rutas con JWT

@@ -57,7 +57,7 @@ export class CreateUserRequestDTO {
   @IsString()
   @MinLength(8)
   @MaxLength(50)
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/, {
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*$/, {
     message:
       'La contraseña debe contener al menos 1 letra mayúscula, 1 minúscula y 1 número',
   })
@@ -103,7 +103,7 @@ export class UpdateUserRequestDTO {
   @IsOptional()
   @MinLength(8)
   @MaxLength(50)
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/, {
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*$/, {
     message:
       'La contraseña debe contener al menos 1 letra mayúscula, 1 minúscula y 1 número',
   })

@@ -11,6 +11,10 @@
       {
         "include": "assets/images/**/*",
         "outDir": "dist/"
+      },
+      {
+        "include": "i18n/**/*",
+        "outDir": "dist/"
       }
     ]
   }

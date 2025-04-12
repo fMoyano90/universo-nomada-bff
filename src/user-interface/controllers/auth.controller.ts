@@ -19,21 +19,18 @@ import {
 import { AuthService } from '../../application-core/auth/auth.service';
 import { JwtAuthGuard } from '../../application-core/auth/guards/jwt-auth.guard';
 import { I18n, I18nContext } from 'nestjs-i18n';
-
-class LoginDto {
-  email: string;
-  password: string;
-}
-
-class RefreshTokenDto {
-  refreshToken: string;
-}
+import { Public } from '../../application-core/auth/decorators/public.decorator';
+import {
+  LoginDto,
+  RefreshTokenDto,
+} from '../../application-core/auth/dto/auth.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'User login' })
@@ -63,6 +60,7 @@ export class AuthController {
     }
   }
 
+  @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh access token' })
@@ -106,7 +104,6 @@ export class AuthController {
     description: 'User not authenticated',
   })
   getProfile(@Request() req) {
-    // The user object is injected by the JwtAuthGuard
     return req.user;
   }
 }

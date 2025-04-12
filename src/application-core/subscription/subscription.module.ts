@@ -5,16 +5,17 @@ import { Subscription } from '../../infrastructure/database/entities/subscriptio
 import { CreateSubscriptionInteractor } from './uses-cases/create-subscription.interactor';
 import { DeleteSubscriptionInteractor } from './uses-cases/delete-subscription.interactor';
 import { GetPaginatedSubscriptionsInteractor } from './uses-cases/get-paginated-subscriptions.interactor';
-import { SubscriptionController } from '../../user-interface/controllers/subscription.controller';
+import { SubscriptionGateway } from '../../infrastructure/database/gateways/subscription.gateway';
 
 @Module({
   imports: [DatabaseModule, TypeOrmModule.forFeature([Subscription])],
   providers: [
+    SubscriptionGateway,
     CreateSubscriptionInteractor,
     DeleteSubscriptionInteractor,
     GetPaginatedSubscriptionsInteractor,
   ],
-  controllers: [SubscriptionController],
+  controllers: [],
   exports: [
     CreateSubscriptionInteractor,
     DeleteSubscriptionInteractor,

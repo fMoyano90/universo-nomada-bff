@@ -32,10 +32,10 @@ import {
 } from '@nestjs/swagger';
 import { Roles } from '../../application-core/auth/decorators/roles.decorator';
 import { UserRole } from '../../application-core/user/dto/user.dto';
+import { Public } from '../../application-core/auth/decorators/public.decorator';
 
 @Controller('users')
 @ApiTags('Users')
-@ApiBearerAuth()
 export class UserController {
   constructor(
     private readonly getUserInteractor: GetUserInteractor,
@@ -45,6 +45,7 @@ export class UserController {
   ) {}
 
   @Get(':id')
+  @ApiBearerAuth()
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'User found successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
@@ -53,6 +54,7 @@ export class UserController {
   }
 
   @Get()
+  @ApiBearerAuth()
   @ApiResponse({ status: 200, description: 'List of users' })
   @Roles(UserRole.ADMIN)
   async getAllUsers() {
@@ -60,6 +62,7 @@ export class UserController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth()
   @HttpCode(204)
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 204, description: 'User deleted successfully' })
@@ -74,11 +77,11 @@ export class UserController {
   }
 
   @Post()
+  @Public()
   @UseInterceptors(FileInterceptor('file'))
   @ApiBody({ type: CreateUserRequestDTO })
   @ApiResponse({ status: 201, description: 'User created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  @Roles(UserRole.ADMIN)
   async createUser(
     @Body() createUserDto: CreateUserRequestDTO,
     @UploadedFile() file,
@@ -87,6 +90,7 @@ export class UserController {
   }
 
   @Put(':id')
+  @ApiBearerAuth()
   @UseInterceptors(FileInterceptor('file'))
   @ApiParam({ name: 'id', type: Number })
   @ApiBody({ type: UpdateUserRequestDTO })
@@ -97,7 +101,6 @@ export class UserController {
   async updateUser(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserRequestDTO,
-    @UploadedFile() file,
   ) {
     return await this.updateUserInteractor.execute(id, updateUserDto);
   }
