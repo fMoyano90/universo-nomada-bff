@@ -18,6 +18,7 @@ import { GetLatestSpecialDestinationInteractor } from './uses-cases/get-latest-s
 import { GetRecommendedDestinationsInteractor } from './uses-cases/get-recommended-destinations.interactor'; // Import GetRecommended Interactor
 import { GetPaginatedDestinationsByTypeInteractor } from './uses-cases/get-paginated-destinations-by-type.interactor'; // Import GetPaginated Interactor
 import { GetLatestDestinationsInteractor } from './uses-cases/get-latest-destinations.interactor';
+import { GetDestinationByIdInteractor } from './uses-cases/get-destination-by-id.interactor';
 import { DestinationController } from '../../user-interface/controllers/destination.controller';
 
 @Module({
@@ -43,6 +44,7 @@ import { DestinationController } from '../../user-interface/controllers/destinat
     GetRecommendedDestinationsInteractor, // Add GetRecommended Interactor
     GetPaginatedDestinationsByTypeInteractor, // Add GetPaginated Interactor
     GetLatestDestinationsInteractor,
+    GetDestinationByIdInteractor,
     // Add other interactors/services here
   ],
   controllers: [DestinationController],
@@ -54,6 +56,7 @@ import { DestinationController } from '../../user-interface/controllers/destinat
     GetRecommendedDestinationsInteractor, // Export GetRecommended Interactor
     GetPaginatedDestinationsByTypeInteractor, // Export GetPaginated Interactor
     GetLatestDestinationsInteractor,
+    GetDestinationByIdInteractor,
     // Export gateway if needed elsewhere, though usually interactors are the public API
   ],
 })

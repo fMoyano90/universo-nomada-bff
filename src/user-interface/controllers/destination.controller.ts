@@ -34,6 +34,7 @@ import { GetLatestSpecialDestinationInteractor } from '../../application-core/de
 import { GetRecommendedDestinationsInteractor } from '../../application-core/destination/uses-cases/get-recommended-destinations.interactor'; // Added GetRecommended Interactor
 import { GetPaginatedDestinationsByTypeInteractor } from '../../application-core/destination/uses-cases/get-paginated-destinations-by-type.interactor'; // Added GetPaginated Interactor
 import { GetLatestDestinationsInteractor } from '../../application-core/destination/uses-cases/get-latest-destinations.interactor';
+import { GetDestinationByIdInteractor } from '../../application-core/destination/uses-cases/get-destination-by-id.interactor';
 import {
   CreateDestinationRequestDTO,
   UpdateDestinationRequestDTO,
@@ -60,6 +61,7 @@ export class DestinationController {
     private readonly getRecommendedDestinationsInteractor: GetRecommendedDestinationsInteractor, // Injected GetRecommended Interactor
     private readonly getPaginatedDestinationsByTypeInteractor: GetPaginatedDestinationsByTypeInteractor, // Injected GetPaginated Interactor
     private readonly getLatestDestinationsInteractor: GetLatestDestinationsInteractor,
+    private readonly getDestinationByIdInteractor: GetDestinationByIdInteractor,
   ) {}
 
   @Post()
@@ -329,5 +331,22 @@ export class DestinationController {
       ...dest,
     }));
     return responseDtos;
+  }
+
+  @Public()
+  @Get(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Obtener un destino por ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Destino encontrado.',
+    type: DestinationResponseDTO,
+  })
+  @ApiResponse({ status: 404, description: 'Destino no encontrado.' })
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<DestinationResponseDTO> {
+    this.logger.log(`Recibida solicitud para obtener destino ID: ${id}`);
+    return this.getDestinationByIdInteractor.execute(id);
   }
 }
