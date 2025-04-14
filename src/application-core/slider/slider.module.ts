@@ -7,9 +7,9 @@ import { DeleteSliderInteractor } from './uses-cases/delete-slider.interactor';
 import { GetSlidersInteractor } from './uses-cases/get-sliders.interactor';
 import { UpdateSliderInteractor } from './uses-cases/update-slider.interactor';
 import { ReorderSliderInteractor } from './uses-cases/reorder-slider.interactor';
-
+import { InfrastructureModule } from '../../infrastructure/infrastructure.module';
 @Module({
-  imports: [TypeOrmModule.forFeature([Slider])],
+  imports: [TypeOrmModule.forFeature([Slider]), InfrastructureModule],
   controllers: [],
   providers: [
     SliderGateway,

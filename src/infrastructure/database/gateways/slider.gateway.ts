@@ -20,13 +20,26 @@ export class SliderGateway implements ISliderGateway {
   async create(createDto: CreateSliderDTO): Promise<Slider> {
     this.logger.log(`Creating new slider: ${JSON.stringify(createDto)}`);
 
-    const maxOrderSlider = await this.sliderRepository.findOne({
-      order: { displayOrder: 'DESC' },
-    });
+    let displayOrder = 0;
+    try {
+      const maxOrderSlider = await this.sliderRepository.find({
+        order: { displayOrder: 'DESC' },
+        take: 1,
+      });
+
+      if (maxOrderSlider && maxOrderSlider.length > 0) {
+        displayOrder = maxOrderSlider[0].displayOrder + 1;
+      }
+    } catch (error) {
+      this.logger.warn(
+        'Error getting max display order, using default 0',
+        error,
+      );
+    }
 
     const newSlider = this.sliderRepository.create({
       ...createDto,
-      displayOrder: maxOrderSlider ? maxOrderSlider.displayOrder + 1 : 0,
+      displayOrder: displayOrder,
     });
 
     return this.sliderRepository.save(newSlider);

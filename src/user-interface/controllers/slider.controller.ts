@@ -8,8 +8,17 @@ import {
   Param,
   UseGuards,
   ParseIntPipe,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import {
   CreateSliderDTO,
   UpdateSliderDTO,
@@ -27,7 +36,7 @@ import { UserRole } from '../../application-core/user/dto/user.dto';
 import { Public } from '../../application-core/auth/decorators/public.decorator';
 
 @ApiTags('Sliders')
-@Controller('api/v1/sliders')
+@Controller('/sliders')
 export class SliderController {
   constructor(
     private readonly getSlidersInteractor: GetSlidersInteractor,
@@ -48,22 +57,70 @@ export class SliderController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
+  @UseInterceptors(FileInterceptor('image'))
   @ApiOperation({ summary: 'Create a new slider' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        subtitle: { type: 'string' },
+        location: { type: 'string' },
+        imageUrl: { type: 'string', nullable: true },
+        buttonText: { type: 'string', nullable: true },
+        buttonUrl: { type: 'string', nullable: true },
+        isActive: { type: 'boolean', nullable: true },
+        displayOrder: { type: 'number', nullable: true },
+        image: {
+          type: 'string',
+          format: 'binary',
+          description: 'Imagen del slider',
+        },
+      },
+    },
+  })
   @ApiResponse({ status: 201, description: 'The slider has been created.' })
-  async create(@Body() createSliderDto: CreateSliderDTO) {
-    return this.createSliderInteractor.execute(createSliderDto);
+  async create(
+    @Body() createSliderDto: CreateSliderDTO,
+    @UploadedFile() imageFile: Express.Multer.File,
+  ) {
+    return this.createSliderInteractor.execute(createSliderDto, imageFile);
   }
 
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
+  @UseInterceptors(FileInterceptor('image'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        subtitle: { type: 'string' },
+        location: { type: 'string' },
+        imageUrl: { type: 'string', nullable: true },
+        buttonText: { type: 'string', nullable: true },
+        buttonUrl: { type: 'string', nullable: true },
+        isActive: { type: 'boolean', nullable: true },
+        displayOrder: { type: 'number', nullable: true },
+        image: {
+          type: 'string',
+          format: 'binary',
+          description: 'Imagen del slider',
+        },
+      },
+    },
+  })
   @ApiOperation({ summary: 'Update a slider' })
   @ApiResponse({ status: 200, description: 'The slider has been updated.' })
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateSliderDto: UpdateSliderDTO,
+    @UploadedFile() imageFile: Express.Multer.File,
   ) {
-    return this.updateSliderInteractor.execute(id, updateSliderDto);
+    return this.updateSliderInteractor.execute(id, updateSliderDto, imageFile);
   }
 
   @Delete(':id')

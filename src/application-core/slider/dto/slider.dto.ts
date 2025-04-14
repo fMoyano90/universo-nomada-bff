@@ -25,9 +25,9 @@ export class CreateSliderDTO {
   location: string;
 
   @ApiProperty({ description: 'URL de la imagen del slider' })
-  @IsUrl()
-  @IsNotEmpty()
-  imageUrl: string;
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
 
   @ApiPropertyOptional({ description: 'Texto del botón' })
   @IsString()
@@ -35,7 +35,7 @@ export class CreateSliderDTO {
   buttonText?: string;
 
   @ApiPropertyOptional({ description: 'URL del botón' })
-  @IsUrl()
+  @IsString()
   @IsOptional()
   buttonUrl?: string;
 
