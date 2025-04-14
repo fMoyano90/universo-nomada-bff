@@ -10,6 +10,8 @@ import { DestinationController } from './controllers/destination.controller';
 import { SubscriptionModule } from '../application-core/subscription/subscription.module';
 import { BookingModule } from '../application-core/booking/booking.module';
 import { DestinationModule } from '../application-core/destination/destination.module';
+import { TestimonialController } from './controllers/testimonial.controller'; // Import TestimonialController
+import { TestimonialModule } from '../application-core/testimonial/testimonial.module'; // Import TestimonialModule
 
 @Module({
   imports: [
@@ -18,6 +20,7 @@ import { DestinationModule } from '../application-core/destination/destination.m
     SubscriptionModule,
     BookingModule,
     DestinationModule,
+    TestimonialModule, // Add TestimonialModule here
   ],
   controllers: [
     UserController,
@@ -26,6 +29,7 @@ import { DestinationModule } from '../application-core/destination/destination.m
     SubscriptionController,
     BookingController,
     DestinationController,
+    TestimonialController, // Add TestimonialController here
   ],
   providers: [],
 })

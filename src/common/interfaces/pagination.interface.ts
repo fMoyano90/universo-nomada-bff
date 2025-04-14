@@ -1,6 +1,8 @@
 export interface PaginationOptions {
-  page: number;
-  limit: number;
+  page?: number; // Make optional for default values
+  limit?: number; // Make optional for default values
+  sortBy?: string; // Optional field to sort by
+  sortOrder?: 'ASC' | 'DESC'; // Optional sort order
 }
 
 export interface PaginationResult<T> {

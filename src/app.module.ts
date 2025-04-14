@@ -10,8 +10,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 // import { User } from './infrastructure/database/entities/user.entity';
 import { InfrastructureModule } from './infrastructure/infrastructure.module';
 import { ApplicationCoreModule } from './application-core/application-core.module';
-import { DestinationModule } from './application-core/destination/destination.module'; // Import DestinationModule
-import { SliderModule } from './application-core/slider/slider.module'; // Import SliderModule
+import { DestinationModule } from './application-core/destination/destination.module';
+import { SliderModule } from './application-core/slider/slider.module';
+import { TestimonialModule } from './application-core/testimonial/testimonial.module'; // Import TestimonialModule
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
@@ -60,8 +61,9 @@ import { AuthModule } from './application-core/auth/auth.module';
     // Módulos de la aplicación
     InfrastructureModule,
     ApplicationCoreModule, // Contains UserModule, AuthModule, etc.
-    DestinationModule, // Add DestinationModule here
-    SliderModule, // Add SliderModule here
+    DestinationModule,
+    SliderModule,
+    TestimonialModule, // Add TestimonialModule here
     UserInterfaceModule,
     AuthModule,
   ],

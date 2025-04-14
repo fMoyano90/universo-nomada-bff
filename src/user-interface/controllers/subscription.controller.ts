@@ -23,6 +23,7 @@ import {
 import { JwtAuthGuard } from '../../application-core/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../application-core/auth/guards/roles.guard';
 import { Roles } from '../../application-core/auth/decorators/roles.decorator';
+import { Public } from '../../application-core/auth/decorators/public.decorator';
 import { UserRole } from '../../application-core/user/dto/user.dto';
 import { CreateSubscriptionInteractor } from '../../application-core/subscription/uses-cases/create-subscription.interactor';
 import { DeleteSubscriptionInteractor } from '../../application-core/subscription/uses-cases/delete-subscription.interactor';
@@ -45,6 +46,7 @@ export class SubscriptionController {
   ) {}
 
   @Post()
+  @Public()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Crear una nueva suscripción' })
   @ApiResponse({
