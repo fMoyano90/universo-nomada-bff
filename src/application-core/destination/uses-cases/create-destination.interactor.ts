@@ -26,6 +26,23 @@ export class CreateDestinationInteractor {
       `Executing CreateDestinationInteractor for: ${createDto.title}`,
     );
     try {
+      // Log para depuración, no modificar valores
+      if (createDto.isRecommended !== undefined) {
+        this.logger.debug(
+          `[INTERACTOR] isRecommended recibido: ${
+            createDto.isRecommended
+          } (${typeof createDto.isRecommended})`,
+        );
+      }
+
+      if (createDto.isSpecial !== undefined) {
+        this.logger.debug(
+          `[INTERACTOR] isSpecial recibido: ${
+            createDto.isSpecial
+          } (${typeof createDto.isSpecial})`,
+        );
+      }
+
       // 1. Upload main image (if provided)
       let imageSrcUrl = createDto.imageSrc; // Use provided URL if no file
       if (imageSrcFile) {

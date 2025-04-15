@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { ValidationPipe, Logger, BadRequestException } from '@nestjs/common';
 import helmet from 'helmet';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
@@ -9,7 +9,9 @@ import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: ['error', 'warn', 'log', 'debug', 'verbose'],
+  });
   const configService = app.get(ConfigService);
 
   // Security middleware
@@ -29,9 +31,28 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
-      forbidNonWhitelisted: false,
       transform: true,
+      forbidNonWhitelisted: true,
       transformOptions: { enableImplicitConversion: true },
+      exceptionFactory: (errors) => {
+        const errorMessages = errors.map(error => {
+          const constraints = error.constraints ? 
+            Object.values(error.constraints).join(', ') : 
+            'Error de validación';
+          return {
+            property: error.property,
+            value: error.value,
+            constraints: constraints
+          };
+        });
+        
+        console.log('Validation errors:', JSON.stringify(errorMessages, null, 2));
+        
+        return new BadRequestException({
+          message: 'Error de validación',
+          errors: errorMessages
+        });
+      }
     }),
   );
   app.useGlobalFilters(new GlobalExceptionFilter());

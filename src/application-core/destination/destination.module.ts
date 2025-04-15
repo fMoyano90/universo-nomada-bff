@@ -20,6 +20,7 @@ import { GetRecommendedDestinationsInteractor } from './uses-cases/get-recommend
 import { GetPaginatedDestinationsByTypeInteractor } from './uses-cases/get-paginated-destinations-by-type.interactor'; // Import GetPaginated Interactor
 import { GetLatestDestinationsInteractor } from './uses-cases/get-latest-destinations.interactor';
 import { GetDestinationByIdInteractor } from './uses-cases/get-destination-by-id.interactor';
+import { GetAllPaginatedDestinationsInteractor } from './uses-cases/get-all-paginated-destinations.interactor'; // Import el nuevo interactor
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { GetDestinationByIdInteractor } from './uses-cases/get-destination-by-id
     GetPaginatedDestinationsByTypeInteractor, // Add GetPaginated Interactor
     GetLatestDestinationsInteractor,
     GetDestinationByIdInteractor,
+    GetAllPaginatedDestinationsInteractor, // Añadir el nuevo interactor aquí
     // Add other interactors/services here
   ],
   controllers: [],
@@ -58,6 +60,7 @@ import { GetDestinationByIdInteractor } from './uses-cases/get-destination-by-id
     GetPaginatedDestinationsByTypeInteractor, // Export GetPaginated Interactor
     GetLatestDestinationsInteractor,
     GetDestinationByIdInteractor,
+    GetAllPaginatedDestinationsInteractor, // Exportar el nuevo interactor aquí
     // Export gateway if needed elsewhere, though usually interactors are the public API
   ],
 })

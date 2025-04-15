@@ -40,15 +40,48 @@ export class SubscriptionGateway {
     }
   }
 
+  async findById(id: number): Promise<Subscription | null> {
+    this.logger.debug(`Buscando suscripción con ID: ${id}`);
+    try {
+      return await this.subscriptionRepository.findOne({ where: { id } });
+    } catch (error) {
+      this.logger.error(
+        `Error buscando suscripción ${id}: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  async update(id: number, data: Partial<Subscription>): Promise<Subscription> {
+    this.logger.debug(`Actualizando suscripción con ID: ${id}`);
+    try {
+      await this.subscriptionRepository.update(id, data);
+      return await this.findById(id);
+    } catch (error) {
+      this.logger.error(
+        `Error actualizando suscripción ${id}: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
   async findAll(
     page: number,
     limit: number,
+    isActive?: boolean,
   ): Promise<PaginatedSubscriptionsResponseDTO> {
     this.logger.debug(
-      `Obteniendo suscripciones página ${page}, límite ${limit}`,
+      `Obteniendo suscripciones página ${page}, límite ${limit}, filtro activo: ${isActive}`,
     );
     try {
+      // Construir condiciones de búsqueda
+      const where = isActive !== undefined ? { isActive } : {};
+
+      // Ejecutar la consulta con filtros
       const [data, total] = await this.subscriptionRepository.findAndCount({
+        where,
         order: { createdAt: 'DESC' },
         skip: (page - 1) * limit,
         take: limit,

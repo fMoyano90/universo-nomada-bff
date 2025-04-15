@@ -29,6 +29,23 @@ export class UpdateDestinationInteractor {
   ): Promise<Destination> {
     this.logger.log(`Executing UpdateDestinationInteractor for ID: ${id}`);
 
+    // Log para depuración, no modificar valores
+    if (updateDto.isRecommended !== undefined) {
+      this.logger.debug(
+        `[INTERACTOR UPDATE] isRecommended recibido: ${
+          updateDto.isRecommended
+        } (${typeof updateDto.isRecommended})`,
+      );
+    }
+
+    if (updateDto.isSpecial !== undefined) {
+      this.logger.debug(
+        `[INTERACTOR UPDATE] isSpecial recibido: ${
+          updateDto.isSpecial
+        } (${typeof updateDto.isSpecial})`,
+      );
+    }
+
     // 1. Check if destination exists (optional, gateway also checks)
     // const existing = await this.destinationGateway.findById(id);
     // if (!existing) {

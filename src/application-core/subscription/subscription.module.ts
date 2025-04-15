@@ -5,6 +5,7 @@ import { Subscription } from '../../infrastructure/database/entities/subscriptio
 import { CreateSubscriptionInteractor } from './uses-cases/create-subscription.interactor';
 import { DeleteSubscriptionInteractor } from './uses-cases/delete-subscription.interactor';
 import { GetPaginatedSubscriptionsInteractor } from './uses-cases/get-paginated-subscriptions.interactor';
+import { ToggleSubscriptionStatusInteractor } from './uses-cases/toggle-subscription-status.interactor';
 import { SubscriptionGateway } from '../../infrastructure/database/gateways/subscription.gateway';
 
 @Module({
@@ -14,12 +15,14 @@ import { SubscriptionGateway } from '../../infrastructure/database/gateways/subs
     CreateSubscriptionInteractor,
     DeleteSubscriptionInteractor,
     GetPaginatedSubscriptionsInteractor,
+    ToggleSubscriptionStatusInteractor,
   ],
   controllers: [],
   exports: [
     CreateSubscriptionInteractor,
     DeleteSubscriptionInteractor,
     GetPaginatedSubscriptionsInteractor,
+    ToggleSubscriptionStatusInteractor,
   ],
 })
 export class SubscriptionModule {}

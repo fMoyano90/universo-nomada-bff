@@ -12,7 +12,8 @@ export class GetPaginatedSubscriptionsInteractor {
   async execute(
     page: number,
     limit: number,
+    isActive?: boolean,
   ): Promise<PaginatedSubscriptionsResponseDTO> {
-    return this.subscriptionGateway.findAll(page, limit);
+    return this.subscriptionGateway.findAll(page, limit, isActive);
   }
 }

@@ -267,6 +267,45 @@ export class DestinationGateway {
     };
   }
 
+  // Método nuevo para obtener todos los destinos paginados sin filtrar por tipo
+  async findAllPaginated(options: {
+    page: number;
+    limit: number;
+  }): Promise<PaginationResult<Destination>> {
+    const { page, limit } = options;
+    this.logger.debug(
+      `Finding all paginated destinations, page: ${page}, limit: ${limit}`,
+    );
+
+    const skip = (page - 1) * limit;
+
+    try {
+      const [data, total] = await this.destinationRepository.findAndCount({
+        order: { createdAt: 'DESC' },
+        take: limit,
+        skip: skip,
+        // Add relations if needed for the paginated list view
+        // relations: ['galleryImages'],
+      });
+
+      const totalPages = Math.ceil(total / limit);
+
+      return {
+        data,
+        total,
+        page,
+        limit,
+        totalPages,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error finding all paginated destinations: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
   async findBySlug(slug: string): Promise<Destination | null> {
     this.logger.debug(`Buscando destino por slug: ${slug}`);
     try {

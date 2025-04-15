@@ -16,6 +16,7 @@ import {
   ParseEnumPipe, // Added ParseEnumPipe
   Query, // Added Query
   DefaultValuePipe, // Added DefaultValuePipe
+  Req, // Added Req
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import {
@@ -26,6 +27,7 @@ import {
   ApiConsumes,
   ApiParam, // Added ApiParam
   ApiQuery, // Added ApiQuery
+  ApiOkResponse,
 } from '@nestjs/swagger';
 import { CreateDestinationInteractor } from '../../application-core/destination/uses-cases/create-destination.interactor';
 import { UpdateDestinationInteractor } from '../../application-core/destination/uses-cases/update-destination.interactor';
@@ -35,6 +37,7 @@ import { GetRecommendedDestinationsInteractor } from '../../application-core/des
 import { GetPaginatedDestinationsByTypeInteractor } from '../../application-core/destination/uses-cases/get-paginated-destinations-by-type.interactor'; // Added GetPaginated Interactor
 import { GetLatestDestinationsInteractor } from '../../application-core/destination/uses-cases/get-latest-destinations.interactor';
 import { GetDestinationByIdInteractor } from '../../application-core/destination/uses-cases/get-destination-by-id.interactor';
+import { GetAllPaginatedDestinationsInteractor } from '../../application-core/destination/uses-cases/get-all-paginated-destinations.interactor'; // <- NUEVA IMPORTACIÓN
 import {
   CreateDestinationRequestDTO,
   UpdateDestinationRequestDTO,
@@ -62,6 +65,7 @@ export class DestinationController {
     private readonly getPaginatedDestinationsByTypeInteractor: GetPaginatedDestinationsByTypeInteractor, // Injected GetPaginated Interactor
     private readonly getLatestDestinationsInteractor: GetLatestDestinationsInteractor,
     private readonly getDestinationByIdInteractor: GetDestinationByIdInteractor,
+    private readonly getAllPaginatedDestinationsInteractor: GetAllPaginatedDestinationsInteractor, // <- NUEVO INTERACTOR INYECTADO
   ) {}
 
   @Post()
@@ -69,33 +73,59 @@ export class DestinationController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Create a new destination with image uploads' })
   @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Create a new destination' })
+  @ApiOkResponse({ type: DestinationResponseDTO })
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'imageSrc', maxCount: 1 },
       { name: 'galleryImages', maxCount: 10 },
     ]),
   )
-  @ApiResponse({
-    status: 201,
-    description: 'The destination has been successfully created.',
-    type: DestinationResponseDTO,
-  })
-  @ApiResponse({ status: 400, description: 'Bad Request.' })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  @ApiResponse({ status: 403, description: 'Forbidden.' })
-  async create(
+  async createDestination(
+    @Body() createDestinationDto: CreateDestinationRequestDTO,
     @UploadedFiles()
     files: {
       imageSrc?: Express.Multer.File[];
       galleryImages?: Express.Multer.File[];
     },
-    @Body() createDestinationDto: CreateDestinationRequestDTO,
-  ): Promise<DestinationResponseDTO> {
+    @Req() req: any, // Obtener acceso directo a la solicitud
+  ) {
+    // Mostrar los valores recibidos pero SIN MODIFICARLOS
     this.logger.log(
-      `Received request to create destination: ${createDestinationDto.title} with files`,
+      `[CONTROLLER] Form data completo: ${JSON.stringify(
+        createDestinationDto,
+      )}`,
     );
+
+    // Acceder directamente a los valores originales del cuerpo de la solicitud
+    const rawBody = req.body || {};
+
+    this.logger.log(`[CONTROLLER] Valores originales:`);
+    this.logger.log(`isRecommended original: ${rawBody.isRecommended}`);
+    this.logger.log(`isSpecial original: ${rawBody.isSpecial}`);
+
+    // Corregir manualmente los valores booleanos basados en los valores originales
+    if (rawBody.isRecommended) {
+      const shouldBeTrue =
+        rawBody.isRecommended === '1' ||
+        rawBody.isRecommended === 'true' ||
+        rawBody.isRecommended === 1;
+      createDestinationDto.isRecommended = shouldBeTrue;
+      this.logger.log(
+        `[CONTROLLER] Corrigiendo isRecommended a: ${shouldBeTrue}`,
+      );
+    }
+
+    if (rawBody.isSpecial !== undefined) {
+      const shouldBeTrue =
+        rawBody.isSpecial === '1' ||
+        rawBody.isSpecial === 'true' ||
+        rawBody.isSpecial === 1;
+      createDestinationDto.isSpecial = shouldBeTrue;
+      this.logger.log(`[CONTROLLER] Corrigiendo isSpecial a: ${shouldBeTrue}`);
+    }
+
     const imageSrcFile = files.imageSrc?.[0];
     const galleryImageFiles = files.galleryImages || [];
     const destinationEntity = await this.createDestinationInteractor.execute(
@@ -115,8 +145,9 @@ export class DestinationController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Update an existing destination' })
   @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Update an existing destination' })
+  @ApiParam({ name: 'id', description: 'Destination ID', type: 'number' })
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'imageSrc', maxCount: 1 },
@@ -132,16 +163,48 @@ export class DestinationController {
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   @ApiResponse({ status: 404, description: 'Not Found.' })
-  async update(
+  async updateDestination(
     @Param('id', ParseIntPipe) id: number,
+    @Body() updateDestinationDto: UpdateDestinationRequestDTO,
     @UploadedFiles()
     files: {
       imageSrc?: Express.Multer.File[];
       galleryImages?: Express.Multer.File[];
     },
-    @Body() updateDestinationDto: UpdateDestinationRequestDTO,
-  ): Promise<DestinationResponseDTO> {
+    @Req() req: any, // Obtener acceso directo a la solicitud
+  ) {
     this.logger.log(`Received request to update destination ID: ${id}`);
+
+    // Acceder directamente a los valores originales del cuerpo de la solicitud
+    const rawBody = req.body || {};
+
+    this.logger.log(`[CONTROLLER UPDATE] Valores originales:`);
+    this.logger.log(`isRecommended original: ${rawBody.isRecommended}`);
+    this.logger.log(`isSpecial original: ${rawBody.isSpecial}`);
+
+    // Corregir manualmente los valores booleanos basados en los valores originales
+    if (rawBody.isRecommended) {
+      const shouldBeTrue =
+        rawBody.isRecommended === '1' ||
+        rawBody.isRecommended === 'true' ||
+        rawBody.isRecommended === 1;
+      updateDestinationDto.isRecommended = shouldBeTrue;
+      this.logger.log(
+        `[CONTROLLER UPDATE] Corrigiendo isRecommended a: ${shouldBeTrue}`,
+      );
+    }
+
+    if (rawBody.isSpecial !== undefined) {
+      const shouldBeTrue =
+        rawBody.isSpecial === '1' ||
+        rawBody.isSpecial === 'true' ||
+        rawBody.isSpecial === 1;
+      updateDestinationDto.isSpecial = shouldBeTrue;
+      this.logger.log(
+        `[CONTROLLER UPDATE] Corrigiendo isSpecial a: ${shouldBeTrue}`,
+      );
+    }
+
     const imageSrcFile = files.imageSrc?.[0];
     const galleryImageFiles = files.galleryImages || [];
     const updatedDestinationEntity =
@@ -349,4 +412,57 @@ export class DestinationController {
     this.logger.log(`Recibida solicitud para obtener destino ID: ${id}`);
     return this.getDestinationByIdInteractor.execute(id);
   }
+
+  // <<< NUEVO MÉTODO para obtener TODOS los destinos paginados >>>
+  @Public()
+  @Get() // Usamos GET /destinations para la lista paginada general
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get all destinations paginated' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: 'Page number',
+    type: Number,
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Items per page',
+    type: Number,
+    example: 10,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Paginated list of all destinations.',
+    type: PaginatedDestinationsResponseDTO,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid pagination parameters.' })
+  async getAllPaginated(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ): Promise<PaginatedDestinationsResponseDTO> {
+    this.logger.log(
+      `Received request for ALL paginated destinations, page: ${page}, limit: ${limit}`,
+    );
+
+    limit = Math.min(limit, 100); // Limitar razonablemente
+    const options = { page, limit };
+    const paginatedResult =
+      await this.getAllPaginatedDestinationsInteractor.execute(options);
+
+    // Corregir el mapeo: Acceder a las propiedades a través de 'meta'
+    const response: PaginatedDestinationsResponseDTO = {
+      data: paginatedResult.data.map((dest) => ({ ...dest })),
+      meta: {
+        total: paginatedResult.meta.total, // <- CORREGIDO
+        page: paginatedResult.meta.page, // <- CORREGIDO
+        limit: paginatedResult.meta.limit, // <- CORREGIDO
+        totalPages: paginatedResult.meta.totalPages, // <- CORREGIDO
+      },
+    };
+
+    return response;
+  }
+  // <<< FIN NUEVO MÉTODO >>>
 }

@@ -15,6 +15,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { DestinationType } from '../../../infrastructure/database/enums/destination-type.enum'; // Correct path
+import { Transform } from 'class-transformer';
 
 // --- Nested DTOs for related entities ---
 
@@ -165,6 +166,39 @@ export class CreateDestinationRequestDTO {
   })
   @IsBoolean()
   @IsOptional()
+  @Type(() => Boolean)
+  @Transform(({ value, obj }) => {
+    // Logs detallados para poder depurar
+    console.log('---------- TRANSFORMANDO isRecommended ----------');
+    console.log('Valor recibido:', value);
+    console.log('Tipo del valor:', typeof value);
+    console.log('Valores de FormData:', Object.keys(obj).join(', '));
+
+    // Lista completa de valores considerados como "true"
+    const trueCases = [
+      true, // booleano true
+      'true', // string "true"
+      '1', // string "1"
+      1, // número 1
+      'YES', // para compatibilidad
+      'yes',
+      'SI',
+      'si',
+      'Y',
+      'y',
+      'T',
+      't',
+      '1000', // para compatibilidad con código anterior
+    ];
+
+    // Verificar si el valor está en la lista de casos "true"
+    const isTrue = trueCases.includes(value);
+
+    console.log('¿Se considera true?', isTrue);
+    console.log('-----------------------------------------------');
+
+    return isTrue;
+  })
   isRecommended?: boolean;
 
   @ApiPropertyOptional({
@@ -173,6 +207,39 @@ export class CreateDestinationRequestDTO {
   })
   @IsBoolean()
   @IsOptional()
+  @Type(() => Boolean)
+  @Transform(({ value, obj }) => {
+    // Logs detallados para poder depurar
+    console.log('---------- TRANSFORMANDO isSpecial ----------');
+    console.log('Valor recibido:', value);
+    console.log('Tipo del valor:', typeof value);
+    console.log('Valores de FormData:', Object.keys(obj).join(', '));
+
+    // Lista completa de valores considerados como "true"
+    const trueCases = [
+      true, // booleano true
+      'true', // string "true"
+      '1', // string "1"
+      1, // número 1
+      'YES', // para compatibilidad
+      'yes',
+      'SI',
+      'si',
+      'Y',
+      'y',
+      'T',
+      't',
+      '1000', // para compatibilidad con código anterior
+    ];
+
+    // Verificar si el valor está en la lista de casos "true"
+    const isTrue = trueCases.includes(value);
+
+    console.log('¿Se considera true?', isTrue);
+    console.log('-----------------------------------------------');
+
+    return isTrue;
+  })
   isSpecial?: boolean;
 
   @ApiProperty({
