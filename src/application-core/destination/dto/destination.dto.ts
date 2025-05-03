@@ -243,7 +243,7 @@ export class CreateDestinationRequestDTO {
   isSpecial?: boolean;
 
   @ApiProperty({
-    description: 'Type of destination (national or international)',
+    description: 'Type of destination (nacional or internacional)',
     enum: DestinationType,
   })
   @IsEnum(DestinationType)
