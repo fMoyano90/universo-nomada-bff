@@ -21,14 +21,6 @@ export class Testimonial {
   name: string;
 
   @ApiProperty({
-    description: "URL or path to the traveler's avatar image",
-    example: '/assets/images/avatars/juan.jpg',
-    required: false,
-  })
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  avatar_image_url: string;
-
-  @ApiProperty({
     description: 'Rating given by the traveler (1-5)',
     example: 5,
   })
@@ -43,17 +35,12 @@ export class Testimonial {
   testimonial_text: string;
 
   @ApiProperty({
-    description:
-      'Array of URLs or paths for trip images associated with the testimonial',
-    example: [
-      '/assets/images/trips/patagonia1.jpg',
-      '/assets/images/trips/patagonia2.jpg',
-    ],
+    description: 'URL or path to the image associated with the testimonial',
+    example: '/assets/images/testimonials/viaje-atacama.jpg',
     required: false,
-    type: [String],
   })
-  @Column({ type: 'text', array: true, nullable: true })
-  trip_image_urls: string[];
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  image_url: string;
 
   @ApiProperty({ description: 'Timestamp when the testimonial was created' })
   @CreateDateColumn({

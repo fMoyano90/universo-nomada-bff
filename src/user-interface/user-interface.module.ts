@@ -10,8 +10,9 @@ import { DestinationController } from './controllers/destination.controller';
 import { SubscriptionModule } from '../application-core/subscription/subscription.module';
 import { BookingModule } from '../application-core/booking/booking.module';
 import { DestinationModule } from '../application-core/destination/destination.module';
-import { TestimonialController } from './controllers/testimonial.controller'; // Import TestimonialController
 import { TestimonialModule } from '../application-core/testimonial/testimonial.module'; // Import TestimonialModule
+import { UploadService } from './services/upload.service'; // Importar UploadService
+import { InfrastructureModule } from '../infrastructure/infrastructure.module'; // Importar InfrastructureModule
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { TestimonialModule } from '../application-core/testimonial/testimonial.m
     BookingModule,
     DestinationModule,
     TestimonialModule, // Add TestimonialModule here
+    InfrastructureModule, // Importar InfrastructureModule para los servicios de Azure y ImageUtils
   ],
   controllers: [
     UserController,
@@ -29,8 +31,10 @@ import { TestimonialModule } from '../application-core/testimonial/testimonial.m
     SubscriptionController,
     BookingController,
     DestinationController,
-    TestimonialController, // Add TestimonialController here
+    // TestimonialController está en el TestimonialModule
   ],
-  providers: [],
+  providers: [
+    UploadService, // Agregar UploadService como proveedor
+  ],
 })
 export class UserInterfaceModule {}

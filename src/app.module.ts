@@ -22,6 +22,8 @@ import { validate } from './common/validation/env.validation';
 import { I18nInterceptor } from './infrastructure/i18n/i18n.interceptor';
 import { TranslationService } from './infrastructure/i18n/translation.service';
 import { AuthModule } from './application-core/auth/auth.module';
+import { UploadController } from './user-interface/controllers/upload.controller';
+import { UploadService } from './user-interface/services/upload.service';
 
 @Module({
   imports: [
@@ -67,6 +69,7 @@ import { AuthModule } from './application-core/auth/auth.module';
     UserInterfaceModule,
     AuthModule,
   ],
+  controllers: [UploadController],
   providers: [
     // Guardia global para proteger todas las rutas con JWT
     {
@@ -108,6 +111,7 @@ import { AuthModule } from './application-core/auth/auth.module';
       provide: APP_FILTER,
       useClass: GlobalExceptionFilter,
     },
+    UploadService,
   ],
 })
 export class AppModule {
