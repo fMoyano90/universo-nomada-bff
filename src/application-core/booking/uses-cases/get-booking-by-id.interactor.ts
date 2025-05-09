@@ -1,15 +1,15 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { BookingGateway } from '../../../infrastructure/database/gateways/booking.gateway';
-import { Booking } from '../../../infrastructure/database/entities/booking.entity';
+import { BookingGateway } from '../../../domain/gateways/booking.gateway';
+import { BookingResponseDTO } from '../dto/booking.dto';
 
 @Injectable()
 export class GetBookingByIdInteractor {
   constructor(
-    @Inject(BookingGateway)
+    @Inject('BookingGateway')
     private readonly bookingGateway: BookingGateway,
   ) {}
 
-  async execute(id: number): Promise<Booking> {
+  async execute(id: number): Promise<BookingResponseDTO> {
     return this.bookingGateway.findById(id);
   }
 }

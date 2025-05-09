@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Put,
+  Post,
   Body,
   Param,
   ParseIntPipe,
@@ -11,6 +12,7 @@ import {
   HttpStatus,
   Logger,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -26,21 +28,22 @@ import { UserRole } from '../../application-core/user/dto/user.dto';
 import { GetPaginatedBookingsInteractor } from '../../application-core/booking/uses-cases/get-paginated-bookings.interactor';
 import { GetBookingByIdInteractor } from '../../application-core/booking/uses-cases/get-booking-by-id.interactor';
 import { UpdateBookingStatusInteractor } from '../../application-core/booking/uses-cases/update-booking-status.interactor';
+import { CreateQuoteInteractor } from '../../application-core/booking/uses-cases/create-quote.interactor';
 import {
   UpdateBookingStatusDTO,
   BookingResponseDTO,
   PaginatedBookingsResponseDTO,
   BookingFiltersDTO,
+  CreateQuoteDTO,
 } from '../../application-core/booking/dto/booking.dto';
 import {
   BookingStatus,
   BookingType,
 } from '../../infrastructure/database/entities/booking.entity';
+import { Public } from '../../application-core/auth/decorators/public.decorator';
 
 @ApiTags('Bookings')
 @Controller('bookings')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN)
 export class BookingController {
   private readonly logger = new Logger(BookingController.name);
 
@@ -48,9 +51,12 @@ export class BookingController {
     private readonly getPaginatedBookingsInteractor: GetPaginatedBookingsInteractor,
     private readonly getBookingByIdInteractor: GetBookingByIdInteractor,
     private readonly updateBookingStatusInteractor: UpdateBookingStatusInteractor,
+    private readonly createQuoteInteractor: CreateQuoteInteractor,
   ) {}
 
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Obtener reservas paginadas' })
@@ -106,6 +112,8 @@ export class BookingController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Obtener una reserva por ID' })
@@ -125,6 +133,8 @@ export class BookingController {
   }
 
   @Put(':id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Actualizar estado de una reserva' })
@@ -145,5 +155,29 @@ export class BookingController {
       `Recibida solicitud para actualizar estado de reserva ID: ${id}`,
     );
     return this.updateBookingStatusInteractor.execute(id, updateStatusDto);
+  }
+
+  @Post('quote')
+  @Public()
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Crear una cotización' })
+  @ApiResponse({
+    status: 201,
+    description: 'Cotización creada con éxito.',
+    type: BookingResponseDTO,
+  })
+  @ApiResponse({ status: 400, description: 'Solicitud inválida.' })
+  async createQuote(
+    @Body() createQuoteDto: CreateQuoteDTO,
+    @Request() req,
+  ): Promise<BookingResponseDTO> {
+    this.logger.log(
+      `Recibida solicitud para crear cotización para destino: ${createQuoteDto.destinationId}`,
+    );
+
+    // Obtener el ID del usuario si está autenticado
+    const userId = req.user?.id;
+
+    return this.createQuoteInteractor.execute(createQuoteDto, userId);
   }
 }

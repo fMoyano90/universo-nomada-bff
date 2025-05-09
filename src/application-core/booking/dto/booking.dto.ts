@@ -1,5 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsDateString,
+  IsBoolean,
+  Min,
+  Max,
+  IsArray,
+} from 'class-validator';
 import {
   BookingStatus,
   BookingType,
@@ -128,4 +139,161 @@ export class PaginatedBookingsResponseDTO {
     limit: number;
     totalPages: number;
   };
+}
+
+export class BookingParticipantDTO {
+  @ApiProperty({
+    description: 'Nombre completo',
+    example: 'Juan Pérez',
+  })
+  @IsString()
+  @IsNotEmpty()
+  fullName: string;
+
+  @ApiProperty({
+    description: 'Edad',
+    example: 35,
+  })
+  @IsNumber()
+  @IsNotEmpty()
+  age: number;
+
+  @ApiProperty({
+    description: 'Tipo de documento',
+    example: 'Pasaporte',
+  })
+  @IsString()
+  @IsNotEmpty()
+  documentType: string;
+
+  @ApiProperty({
+    description: 'Número de documento',
+    example: 'AB123456',
+  })
+  @IsString()
+  @IsNotEmpty()
+  documentNumber: string;
+}
+
+export class CreateQuoteDTO {
+  @ApiProperty({
+    description: 'ID del destino seleccionado',
+    example: 1,
+  })
+  @IsNumber()
+  @IsNotEmpty()
+  destinationId: number;
+
+  @ApiProperty({
+    description: 'Fecha de inicio (si está establecida)',
+    example: '2023-06-01',
+    required: false,
+  })
+  @IsDateString()
+  @IsOptional()
+  startDate?: string;
+
+  @ApiProperty({
+    description: 'Fecha de fin (si está establecida)',
+    example: '2023-06-15',
+    required: false,
+  })
+  @IsDateString()
+  @IsOptional()
+  endDate?: string;
+
+  @ApiProperty({
+    description: 'Número de adultos',
+    example: 2,
+    minimum: 1,
+  })
+  @IsNumber()
+  @Min(1)
+  @Max(10)
+  @IsNotEmpty()
+  @ApiProperty({
+    description: 'Número de adultos',
+    example: 2,
+    minimum: 1,
+  })
+  @IsNumber()
+  @Min(1)
+  @Max(10)
+  @IsNotEmpty()
+  adults = 0;
+
+  @ApiProperty({
+    description: 'Número de niños',
+    example: 0,
+    default: 0,
+  })
+  @IsNumber()
+  @Min(0)
+  @Max(8)
+  @IsOptional()
+  children = 0;
+
+  @ApiProperty({
+    description: 'Número de infantes',
+    example: 0,
+    default: 0,
+  })
+  @IsNumber()
+  @Min(0)
+  @Max(5)
+  @IsOptional()
+  infants = 0;
+
+  @ApiProperty({
+    description: 'Número de adultos mayores',
+    example: 0,
+    default: 0,
+  })
+  @IsNumber()
+  @Min(0)
+  @Max(5)
+  @IsOptional()
+  seniors = 0;
+
+  @ApiProperty({
+    description: 'Si necesita alojamiento',
+    example: true,
+  })
+  @IsBoolean()
+  @IsNotEmpty()
+  needsAccommodation: boolean;
+
+  @ApiProperty({
+    description: 'Requisitos especiales',
+    example: 'Necesito un guía que hable español',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  specialRequests?: string;
+
+  @ApiProperty({
+    description: 'Información de contacto del usuario',
+    example: {
+      name: 'Juan Pérez',
+      email: 'juan@example.com',
+      phone: '+56912345678',
+    },
+  })
+  @IsNotEmpty()
+  contactInfo: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+}
+
+export class CreateBookingDTO extends CreateQuoteDTO {
+  @ApiProperty({
+    description: 'Lista de participantes',
+    type: [BookingParticipantDTO],
+  })
+  @IsArray()
+  @IsNotEmpty()
+  participants: BookingParticipantDTO[];
 }

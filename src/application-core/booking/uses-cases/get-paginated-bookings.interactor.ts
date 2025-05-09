@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { BookingGateway } from '../../../infrastructure/database/gateways/booking.gateway';
+import { BookingGateway } from '../../../domain/gateways/booking.gateway';
 import {
   PaginatedBookingsResponseDTO,
   BookingFiltersDTO,
@@ -8,7 +8,7 @@ import {
 @Injectable()
 export class GetPaginatedBookingsInteractor {
   constructor(
-    @Inject(BookingGateway)
+    @Inject('BookingGateway')
     private readonly bookingGateway: BookingGateway,
   ) {}
 
@@ -17,6 +17,6 @@ export class GetPaginatedBookingsInteractor {
     limit: number,
     filters?: BookingFiltersDTO,
   ): Promise<PaginatedBookingsResponseDTO> {
-    return this.bookingGateway.findAll(page, limit, filters);
+    return this.bookingGateway.getPaginated(page, limit, filters);
   }
 }

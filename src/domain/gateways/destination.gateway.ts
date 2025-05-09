@@ -6,16 +6,31 @@ import {
 import { DestinationType } from '../../infrastructure/database/enums/destination-type.enum';
 import { PaginationResult } from '../../common/interfaces/pagination.interface';
 
+export interface DestinationResponseDTO {
+  id: number;
+  name: string;
+  slug: string;
+  country: string;
+  description: string;
+  imageUrl: string;
+  featured: boolean;
+  price: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface IDestinationGateway {
-  create(createDto: CreateDestinationRequestDTO): Promise<Destination>;
-  findAll(): Promise<Destination[]>;
-  findById(id: number): Promise<Destination | null>;
-  findBySlug(slug: string): Promise<Destination | null>;
+  create(
+    data: Partial<DestinationResponseDTO>,
+  ): Promise<DestinationResponseDTO>;
+  findAll(options?: { featured?: boolean }): Promise<DestinationResponseDTO[]>;
+  findById(id: number): Promise<DestinationResponseDTO | null>;
+  findBySlug(slug: string): Promise<DestinationResponseDTO | null>;
   update(
     id: number,
-    updateDto: UpdateDestinationRequestDTO,
-  ): Promise<Destination>;
-  delete(id: number): Promise<boolean>;
+    data: Partial<DestinationResponseDTO>,
+  ): Promise<DestinationResponseDTO>;
+  delete(id: number): Promise<void>;
   findLatest(limit: number): Promise<Destination[]>;
   findLatestSpecial(): Promise<Destination | null>;
   findRecommendedByType(

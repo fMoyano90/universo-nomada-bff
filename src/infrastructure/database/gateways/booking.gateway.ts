@@ -20,7 +20,18 @@ export class BookingGateway {
     private readonly bookingRepository: Repository<Booking>,
   ) {}
 
-  async findAll(
+  async create(bookingData: Partial<Booking>): Promise<Booking> {
+    this.logger.debug(`Creando nueva reserva`);
+    try {
+      const newBooking = this.bookingRepository.create(bookingData);
+      return await this.bookingRepository.save(newBooking);
+    } catch (error) {
+      this.logger.error(`Error creando reserva: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  async getPaginated(
     page: number,
     limit: number,
     filters?: BookingFiltersDTO,
@@ -68,6 +79,15 @@ export class BookingGateway {
       );
       throw error;
     }
+  }
+
+  // Alias para mantener compatibilidad con código existente
+  async findAll(
+    page: number,
+    limit: number,
+    filters?: BookingFiltersDTO,
+  ): Promise<PaginatedBookingsResponseDTO> {
+    return this.getPaginated(page, limit, filters);
   }
 
   async findById(id: number): Promise<Booking> {

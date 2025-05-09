@@ -51,11 +51,11 @@ export class Booking {
   })
   bookingType: BookingType;
 
-  @Column({ name: 'start_date', type: 'date' })
-  startDate: Date;
+  @Column({ name: 'start_date', type: 'date', nullable: true })
+  startDate: Date | null;
 
-  @Column({ name: 'end_date', type: 'date' })
-  endDate: Date;
+  @Column({ name: 'end_date', type: 'date', nullable: true })
+  endDate: Date | null;
 
   @Column({ name: 'num_people' })
   numPeople: number;
