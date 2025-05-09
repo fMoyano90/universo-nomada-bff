@@ -20,7 +20,7 @@ export class UpdateBookingStatusDTO {
   @ApiProperty({
     enum: BookingStatus,
     description: 'Estado de la reserva',
-    example: BookingStatus.CONFIRMED,
+    example: BookingStatus.APPROVED,
   })
   @IsEnum(BookingStatus)
   @IsNotEmpty()
@@ -34,6 +34,73 @@ export class UpdateBookingStatusDTO {
   @IsEnum(BookingType)
   @IsNotEmpty()
   bookingType: BookingType;
+}
+
+export class UpdateBookingDTO {
+  @ApiProperty({
+    enum: BookingStatus,
+    description: 'Estado de la reserva',
+    example: BookingStatus.APPROVED,
+    required: false,
+  })
+  @IsEnum(BookingStatus)
+  @IsOptional()
+  status?: BookingStatus;
+
+  @ApiProperty({
+    enum: BookingType,
+    description: 'Tipo de reserva (cotización o reserva)',
+    example: BookingType.BOOKING,
+    required: false,
+  })
+  @IsEnum(BookingType)
+  @IsOptional()
+  bookingType?: BookingType;
+
+  @ApiProperty({
+    description: 'Precio total de la reserva',
+    example: 1500.0,
+    required: false,
+  })
+  @IsNumber()
+  @IsOptional()
+  totalPrice?: number;
+
+  @ApiProperty({
+    description: 'Fecha de inicio',
+    example: '2023-06-01',
+    required: false,
+  })
+  @IsDateString()
+  @IsOptional()
+  startDate?: string;
+
+  @ApiProperty({
+    description: 'Fecha de fin',
+    example: '2023-06-15',
+    required: false,
+  })
+  @IsDateString()
+  @IsOptional()
+  endDate?: string;
+
+  @ApiProperty({
+    description: 'Número de personas',
+    example: 3,
+    required: false,
+  })
+  @IsNumber()
+  @IsOptional()
+  numPeople?: number;
+
+  @ApiProperty({
+    description: 'Requisitos especiales',
+    example: 'Necesito un guía que hable español',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  specialRequests?: string;
 }
 
 export class BookingFiltersDTO {
@@ -95,6 +162,15 @@ export class BookingResponseDTO {
 
   @ApiProperty({ type: () => BookingParticipantResponseDTO, isArray: true })
   participants: BookingParticipantResponseDTO[];
+
+  @ApiProperty({ required: false, description: 'Nombre del destino' })
+  destinationName?: string;
+
+  @ApiProperty({ required: false, description: 'Nombre del contacto' })
+  contactName?: string;
+
+  @ApiProperty({ required: false, description: 'Teléfono del contacto' })
+  contactPhone?: string;
 }
 
 export class BookingParticipantResponseDTO {

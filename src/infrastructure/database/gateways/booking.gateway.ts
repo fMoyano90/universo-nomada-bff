@@ -1,32 +1,144 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, FindOptionsWhere } from 'typeorm';
+import {
+  BookingGateway as BookingGatewayInterface,
+  CreateBookingData,
+  CreateBookingParticipantData,
+} from '../../../domain/gateways/booking.gateway';
+import {
+  BookingResponseDTO,
+  BookingFiltersDTO,
+} from '../../../application-core/booking/dto/booking.dto';
 import {
   Booking,
   BookingStatus,
   BookingType,
 } from '../entities/booking.entity';
-import {
-  PaginatedBookingsResponseDTO,
-  BookingFiltersDTO,
-} from '../../../application-core/booking/dto/booking.dto';
+import { BookingParticipant } from '../entities/booking-participant.entity';
+import { Destination } from '../entities/destination.entity';
+import { User } from '../entities/user.entity';
 
 @Injectable()
-export class BookingGateway {
+export class BookingGateway implements BookingGatewayInterface {
   private readonly logger = new Logger(BookingGateway.name);
 
   constructor(
     @InjectRepository(Booking)
     private readonly bookingRepository: Repository<Booking>,
+    @InjectRepository(BookingParticipant)
+    private readonly participantRepository: Repository<BookingParticipant>,
+    @InjectRepository(Destination)
+    private readonly destinationRepository: Repository<Destination>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
-  async create(bookingData: Partial<Booking>): Promise<Booking> {
+  async create(data: CreateBookingData): Promise<{ id: number }> {
     this.logger.debug(`Creando nueva reserva`);
     try {
-      const newBooking = this.bookingRepository.create(bookingData);
-      return await this.bookingRepository.save(newBooking);
+      const booking = this.bookingRepository.create(data);
+      const savedBooking = await this.bookingRepository.save(booking);
+      return { id: savedBooking.id };
     } catch (error) {
       this.logger.error(`Error creando reserva: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  async findById(id: number): Promise<BookingResponseDTO> {
+    this.logger.debug(`Buscando reserva con ID: ${id}`);
+    try {
+      const booking = await this.bookingRepository.findOne({
+        where: { id },
+        relations: ['participants', 'destination', 'user'],
+      });
+
+      if (!booking) {
+        throw new NotFoundException(`Reserva con ID ${id} no encontrada`);
+      }
+
+      const response: BookingResponseDTO = {
+        ...booking,
+        participants: booking.participants || [],
+        destinationName: booking.destination?.title || null,
+        contactName: booking.user
+          ? `${booking.user.firstName || ''} ${
+              booking.user.lastName || ''
+            }`.trim()
+          : null,
+        contactPhone: booking.user?.phone || null,
+      };
+
+      return response;
+    } catch (error) {
+      this.logger.error(
+        `Error buscando reserva ${id}: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  async findByUserId(userId: number): Promise<BookingResponseDTO[]> {
+    this.logger.debug(`Buscando reservas del usuario con ID: ${userId}`);
+    try {
+      const bookings = await this.bookingRepository.find({
+        where: { userId },
+        relations: ['participants', 'destination', 'user'],
+        order: { createdAt: 'DESC' },
+      });
+
+      return bookings.map((booking) => ({
+        ...booking,
+        participants: booking.participants || [],
+        destinationName: booking.destination?.title || null,
+        contactName: booking.user
+          ? `${booking.user.firstName || ''} ${
+              booking.user.lastName || ''
+            }`.trim()
+          : null,
+        contactPhone: booking.user?.phone || null,
+      }));
+    } catch (error) {
+      this.logger.error(
+        `Error buscando reservas del usuario ${userId}: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  async update(
+    id: number,
+    data: Partial<CreateBookingData>,
+  ): Promise<BookingResponseDTO> {
+    this.logger.debug(`Actualizando reserva con ID: ${id}`);
+    try {
+      await this.bookingRepository.update(id, data);
+      return this.findById(id);
+    } catch (error) {
+      this.logger.error(
+        `Error actualizando reserva ${id}: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  async updateStatus(
+    id: number,
+    status: BookingStatus,
+  ): Promise<BookingResponseDTO> {
+    this.logger.debug(`Actualizando estado de reserva ${id} a ${status}`);
+    try {
+      await this.bookingRepository.update(id, { status });
+      return this.findById(id);
+    } catch (error) {
+      this.logger.error(
+        `Error actualizando estado de reserva ${id}: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -35,41 +147,58 @@ export class BookingGateway {
     page: number,
     limit: number,
     filters?: BookingFiltersDTO,
-  ): Promise<PaginatedBookingsResponseDTO> {
+  ): Promise<{
+    data: BookingResponseDTO[];
+    meta: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  }> {
     this.logger.debug(
       `Obteniendo reservas página ${page}, límite ${limit}, filtros: ${JSON.stringify(
         filters,
       )}`,
     );
     try {
-      const queryBuilder = this.bookingRepository
-        .createQueryBuilder('booking')
-        .leftJoinAndSelect('booking.participants', 'participants')
-        .orderBy('booking.createdAt', 'DESC')
-        .skip((page - 1) * limit)
-        .take(limit);
+      const where: FindOptionsWhere<Booking> = {};
 
       if (filters?.status) {
-        queryBuilder.andWhere('booking.status = :status', {
-          status: filters.status,
-        });
+        where.status = filters.status;
       }
 
       if (filters?.bookingType) {
-        queryBuilder.andWhere('booking.bookingType = :bookingType', {
-          bookingType: filters.bookingType,
-        });
+        where.bookingType = filters.bookingType;
       }
 
-      const [data, total] = await queryBuilder.getManyAndCount();
+      const [bookings, total] = await this.bookingRepository.findAndCount({
+        where,
+        relations: ['participants', 'destination', 'user'],
+        order: { createdAt: 'DESC' },
+        skip: (page - 1) * limit,
+        take: limit,
+      });
+
+      const totalPages = Math.ceil(total / limit);
 
       return {
-        data,
+        data: bookings.map((booking) => ({
+          ...booking,
+          participants: booking.participants || [],
+          destinationName: booking.destination?.title || null,
+          contactName: booking.user
+            ? `${booking.user.firstName || ''} ${
+                booking.user.lastName || ''
+              }`.trim()
+            : null,
+          contactPhone: booking.user?.phone || null,
+        })),
         meta: {
           total,
           page,
           limit,
-          totalPages: Math.ceil(total / limit),
+          totalPages,
         },
       };
     } catch (error) {
@@ -81,53 +210,19 @@ export class BookingGateway {
     }
   }
 
-  // Alias para mantener compatibilidad con código existente
-  async findAll(
-    page: number,
-    limit: number,
-    filters?: BookingFiltersDTO,
-  ): Promise<PaginatedBookingsResponseDTO> {
-    return this.getPaginated(page, limit, filters);
-  }
-
-  async findById(id: number): Promise<Booking> {
-    this.logger.debug(`Buscando reserva con ID: ${id}`);
+  async createParticipant(
+    data: CreateBookingParticipantData,
+  ): Promise<{ id: number }> {
+    this.logger.debug(`Creando nuevo participante`);
     try {
-      const booking = await this.bookingRepository.findOne({
-        where: { id },
-        relations: ['participants'],
-      });
-
-      if (!booking) {
-        throw new NotFoundException(`Reserva con ID ${id} no encontrada`);
-      }
-
-      return booking;
-    } catch (error) {
-      this.logger.error(
-        `Error buscando reserva ${id}: ${error.message}`,
-        error.stack,
+      const participant = this.participantRepository.create(data);
+      const savedParticipant = await this.participantRepository.save(
+        participant,
       );
-      throw error;
-    }
-  }
-
-  async updateStatus(
-    id: number,
-    status: BookingStatus,
-    bookingType: BookingType,
-  ): Promise<Booking> {
-    this.logger.debug(
-      `Actualizando estado de reserva ${id} a ${status} y tipo a ${bookingType}`,
-    );
-    try {
-      const booking = await this.findById(id);
-      booking.status = status;
-      booking.bookingType = bookingType;
-      return await this.bookingRepository.save(booking);
+      return { id: savedParticipant.id };
     } catch (error) {
       this.logger.error(
-        `Error actualizando estado de reserva ${id}: ${error.message}`,
+        `Error creando participante: ${error.message}`,
         error.stack,
       );
       throw error;

@@ -12,6 +12,7 @@ import { GetPaginatedBookingsInteractor } from './uses-cases/get-paginated-booki
 import { GetBookingByIdInteractor } from './uses-cases/get-booking-by-id.interactor';
 import { UpdateBookingStatusInteractor } from './uses-cases/update-booking-status.interactor';
 import { CreateQuoteInteractor } from './uses-cases/create-quote.interactor';
+import { UpdateBookingInteractor } from './uses-cases/update-booking.interactor';
 import { BookingController } from '../../user-interface/controllers/booking.controller';
 
 @Module({
@@ -36,6 +37,7 @@ import { BookingController } from '../../user-interface/controllers/booking.cont
     GetBookingByIdInteractor,
     UpdateBookingStatusInteractor,
     CreateQuoteInteractor,
+    UpdateBookingInteractor,
   ],
   controllers: [BookingController],
   exports: [
@@ -43,6 +45,7 @@ import { BookingController } from '../../user-interface/controllers/booking.cont
     GetBookingByIdInteractor,
     UpdateBookingStatusInteractor,
     CreateQuoteInteractor,
+    UpdateBookingInteractor,
   ],
 })
 export class BookingModule {}

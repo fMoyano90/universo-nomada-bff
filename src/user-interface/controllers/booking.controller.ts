@@ -29,12 +29,14 @@ import { GetPaginatedBookingsInteractor } from '../../application-core/booking/u
 import { GetBookingByIdInteractor } from '../../application-core/booking/uses-cases/get-booking-by-id.interactor';
 import { UpdateBookingStatusInteractor } from '../../application-core/booking/uses-cases/update-booking-status.interactor';
 import { CreateQuoteInteractor } from '../../application-core/booking/uses-cases/create-quote.interactor';
+import { UpdateBookingInteractor } from '../../application-core/booking/uses-cases/update-booking.interactor';
 import {
   UpdateBookingStatusDTO,
   BookingResponseDTO,
   PaginatedBookingsResponseDTO,
   BookingFiltersDTO,
   CreateQuoteDTO,
+  UpdateBookingDTO,
 } from '../../application-core/booking/dto/booking.dto';
 import {
   BookingStatus,
@@ -52,6 +54,7 @@ export class BookingController {
     private readonly getBookingByIdInteractor: GetBookingByIdInteractor,
     private readonly updateBookingStatusInteractor: UpdateBookingStatusInteractor,
     private readonly createQuoteInteractor: CreateQuoteInteractor,
+    private readonly updateBookingInteractor: UpdateBookingInteractor,
   ) {}
 
   @Get()
@@ -179,5 +182,28 @@ export class BookingController {
     const userId = req.user?.id;
 
     return this.createQuoteInteractor.execute(createQuoteDto, userId);
+  }
+
+  @Put(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Actualizar detalles de una reserva o cotización' })
+  @ApiResponse({
+    status: 200,
+    description: 'Reserva actualizada correctamente.',
+    type: BookingResponseDTO,
+  })
+  @ApiResponse({ status: 400, description: 'Solicitud inválida.' })
+  @ApiResponse({ status: 401, description: 'No autorizado.' })
+  @ApiResponse({ status: 403, description: 'Prohibido.' })
+  @ApiResponse({ status: 404, description: 'No encontrado.' })
+  async updateBooking(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateBookingDto: UpdateBookingDTO,
+  ): Promise<BookingResponseDTO> {
+    this.logger.log(`Recibida solicitud para actualizar la reserva ID: ${id}`);
+    return this.updateBookingInteractor.execute(id, updateBookingDto);
   }
 }
