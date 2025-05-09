@@ -211,16 +211,7 @@ export class CreateQuoteDTO {
   @Min(1)
   @Max(10)
   @IsNotEmpty()
-  @ApiProperty({
-    description: 'Número de adultos',
-    example: 2,
-    minimum: 1,
-  })
-  @IsNumber()
-  @Min(1)
-  @Max(10)
-  @IsNotEmpty()
-  adults = 0;
+  adults: number;
 
   @ApiProperty({
     description: 'Número de niños',
@@ -231,7 +222,7 @@ export class CreateQuoteDTO {
   @Min(0)
   @Max(8)
   @IsOptional()
-  children = 0;
+  children?: number;
 
   @ApiProperty({
     description: 'Número de infantes',
@@ -242,7 +233,7 @@ export class CreateQuoteDTO {
   @Min(0)
   @Max(5)
   @IsOptional()
-  infants = 0;
+  infants?: number;
 
   @ApiProperty({
     description: 'Número de adultos mayores',
@@ -253,7 +244,7 @@ export class CreateQuoteDTO {
   @Min(0)
   @Max(5)
   @IsOptional()
-  seniors = 0;
+  seniors?: number;
 
   @ApiProperty({
     description: 'Si necesita alojamiento',
@@ -286,6 +277,16 @@ export class CreateQuoteDTO {
     email: string;
     phone: string;
   };
+
+  @ApiProperty({
+    enum: BookingType,
+    description: 'Tipo de reserva (quote o booking)',
+    required: false,
+    default: BookingType.QUOTE,
+  })
+  @IsEnum(BookingType)
+  @IsOptional()
+  bookingType?: string;
 }
 
 export class CreateBookingDTO extends CreateQuoteDTO {

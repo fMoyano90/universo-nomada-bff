@@ -26,7 +26,11 @@ export class CreateQuoteInteractor {
     userId?: number,
   ): Promise<BookingResponseDTO> {
     this.logger.log(
-      `Creando cotización para destino ID: ${createQuoteDto.destinationId}`,
+      `Creando ${
+        createQuoteDto.bookingType === BookingType.BOOKING
+          ? 'reserva'
+          : 'cotización'
+      } para destino ID: ${createQuoteDto.destinationId}`,
     );
 
     // Verificar si el destino existe
@@ -56,18 +60,34 @@ export class CreateQuoteInteractor {
       (createQuoteDto.infants || 0) +
       (createQuoteDto.seniors || 0);
 
-    // Crear la cotización
+    // Determinar el tipo de solicitud (cotización o reserva directa)
+    let bookingType;
+    if (createQuoteDto.bookingType) {
+      // Verificar si el valor enviado coincide directamente con los valores del enum
+      if (createQuoteDto.bookingType === 'quote') {
+        bookingType = BookingType.QUOTE;
+      } else if (createQuoteDto.bookingType === 'booking') {
+        bookingType = BookingType.BOOKING;
+      } else {
+        // Intentar la notación por clave si no coincide directamente
+        bookingType =
+          BookingType[createQuoteDto.bookingType as keyof typeof BookingType] ||
+          BookingType.QUOTE;
+      }
+    } else {
+      bookingType = BookingType.QUOTE;
+    }
+
+    // Crear la solicitud en la base de datos
     const newQuote = await this.bookingGateway.create({
       userId: userIdToUse,
       destinationId: createQuoteDto.destinationId,
-      bookingType: BookingType.QUOTE,
+      bookingType,
       status: BookingStatus.PENDING,
       startDate: createQuoteDto.startDate
         ? new Date(createQuoteDto.startDate)
-        : new Date(),
-      endDate: createQuoteDto.endDate
-        ? new Date(createQuoteDto.endDate)
-        : new Date(new Date().setDate(new Date().getDate() + 7)),
+        : null,
+      endDate: createQuoteDto.endDate ? new Date(createQuoteDto.endDate) : null,
       numPeople: totalPeople,
       totalPrice: 0, // El precio se determina posteriormente por el admin
       specialRequests: this.buildSpecialRequestsString(createQuoteDto),
