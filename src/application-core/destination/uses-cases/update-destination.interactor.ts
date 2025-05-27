@@ -24,8 +24,6 @@ export class UpdateDestinationInteractor {
     updateDto: UpdateDestinationRequestDTO,
     imageSrcFile?: Express.Multer.File,
     galleryImageFiles?: Express.Multer.File[],
-    // Add a flag or specific field in DTO if needed to indicate deletion of existing gallery images
-    // For now, we assume new gallery images replace old ones if provided.
   ): Promise<Destination> {
     this.logger.log(`Executing UpdateDestinationInteractor for ID: ${id}`);
 
@@ -77,44 +75,77 @@ export class UpdateDestinationInteractor {
       }
     }
 
-    // 3. Handle gallery image updates (if files provided)
-    // This simple implementation REPLACES existing gallery images if new ones are uploaded.
-    // More complex logic would be needed to add/remove specific images.
-    if (galleryImageFiles && galleryImageFiles.length > 0) {
-      this.logger.debug(
-        `Uploading ${galleryImageFiles.length} new gallery images (will replace existing).`,
-      );
-      const galleryUrls: { imageUrl: string }[] = [];
-      for (const file of galleryImageFiles) {
-        try {
-          const galleryUrl = await this.azureStorageService.uploadBlob(
-            `destinations/gallery/${Date.now()}-${file.originalname}`,
-            file.buffer,
-            file.mimetype,
-          );
-          galleryUrls.push({ imageUrl: galleryUrl });
-          this.logger.debug(`New gallery image uploaded to: ${galleryUrl}`);
-        } catch (uploadError) {
-          this.logger.error(
-            `Failed to upload gallery image ${file.originalname} during update: ${uploadError.message}`,
-            uploadError.stack,
-          );
-          throw new BadRequestException(
-            `Failed to upload gallery image ${file.originalname}: ${uploadError.message}`,
-          );
+    // 3. Handle gallery image updates - LÓGICA COMPLETA PARA TODOS LOS CASOS
+    const finalGalleryImages: { imageUrl: string }[] = [];
+
+    // Caso especial: Si clearGallery es true, limpiar toda la galería
+    if (updateDto.clearGallery === 'true') {
+      this.logger.debug('Clearing all gallery images as requested.');
+      updateDto.galleryImages = []; // Array vacío para limpiar
+    } else {
+      // Primero, agregar las imágenes existentes que el usuario quiere preservar
+      if (
+        updateDto.existingGalleryImages &&
+        updateDto.existingGalleryImages.length > 0
+      ) {
+        finalGalleryImages.push(...updateDto.existingGalleryImages);
+        this.logger.debug(
+          `Preserving ${updateDto.existingGalleryImages.length} existing gallery images.`,
+        );
+      }
+
+      // Luego, subir y agregar las nuevas imágenes
+      if (galleryImageFiles && galleryImageFiles.length > 0) {
+        this.logger.debug(
+          `Uploading ${galleryImageFiles.length} new gallery images.`,
+        );
+
+        for (const file of galleryImageFiles) {
+          try {
+            const galleryUrl = await this.azureStorageService.uploadBlob(
+              `destinations/gallery/${Date.now()}-${file.originalname}`,
+              file.buffer,
+              file.mimetype,
+            );
+            finalGalleryImages.push({ imageUrl: galleryUrl });
+            this.logger.debug(`New gallery image uploaded to: ${galleryUrl}`);
+          } catch (uploadError) {
+            this.logger.error(
+              `Failed to upload gallery image ${file.originalname} during update: ${uploadError.message}`,
+              uploadError.stack,
+            );
+            throw new BadRequestException(
+              `Failed to upload gallery image ${file.originalname}: ${uploadError.message}`,
+            );
+          }
         }
       }
-      // Update the DTO to include the new gallery image URLs for the gateway to process
-      updateDto.galleryImages = galleryUrls as GalleryImage[]; // Cast needed as DTO expects GalleryImageDTO structure but gateway maps it
-    } else if (updateDto.galleryImages !== undefined) {
-      // If galleryImages array is explicitly provided in DTO (even if empty),
-      // assume intent is to replace/clear existing gallery.
-      // The gateway's merge/save logic with cascade handles this.
-      this.logger.debug(
-        'Gallery images provided in DTO, will be updated/replaced.',
-      );
+
+      // Actualizar el DTO con la combinación final de imágenes
+      if (
+        finalGalleryImages.length > 0 ||
+        updateDto.existingGalleryImages !== undefined
+      ) {
+        // Si hay imágenes finales O si se enviaron imágenes existentes explícitamente
+        // (incluso si el array está vacío, significa que el usuario quiere esa configuración)
+        updateDto.galleryImages = finalGalleryImages as GalleryImage[];
+        this.logger.debug(
+          `Final gallery will have ${finalGalleryImages.length} images total.`,
+        );
+      } else if (updateDto.galleryImages !== undefined) {
+        // Si galleryImages está explícitamente definido en el DTO pero no hay cambios,
+        // mantener el comportamiento original
+        this.logger.debug(
+          'Gallery images provided in DTO, will be updated/replaced.',
+        );
+      }
+      // Si no hay archivos nuevos, ni imágenes existentes explícitas, ni galleryImages en DTO,
+      // las imágenes existentes en la BD permanecen intactas.
     }
-    // If galleryImageFiles is empty AND updateDto.galleryImages is undefined, existing gallery images remain untouched.
+
+    // Limpiar los campos auxiliares del DTO antes de enviarlo al gateway
+    delete updateDto.existingGalleryImages;
+    delete updateDto.clearGallery;
 
     // 4. Pass the potentially modified DTO to the gateway
     try {

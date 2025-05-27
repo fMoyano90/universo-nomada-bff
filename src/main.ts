@@ -35,24 +35,27 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
       transformOptions: { enableImplicitConversion: true },
       exceptionFactory: (errors) => {
-        const errorMessages = errors.map(error => {
-          const constraints = error.constraints ? 
-            Object.values(error.constraints).join(', ') : 
-            'Error de validación';
+        const errorMessages = errors.map((error) => {
+          const constraints = error.constraints
+            ? Object.values(error.constraints).join(', ')
+            : 'Error de validación';
           return {
             property: error.property,
             value: error.value,
-            constraints: constraints
+            constraints: constraints,
           };
         });
-        
-        console.log('Validation errors:', JSON.stringify(errorMessages, null, 2));
-        
+
+        console.log(
+          'Validation errors:',
+          JSON.stringify(errorMessages, null, 2),
+        );
+
         return new BadRequestException({
           message: 'Error de validación',
-          errors: errorMessages
+          errors: errorMessages,
         });
-      }
+      },
     }),
   );
   app.useGlobalFilters(new GlobalExceptionFilter());

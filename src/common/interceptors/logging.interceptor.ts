@@ -18,10 +18,10 @@ export class LoggingInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest<Request>();
     const { method, url, ip, headers } = request;
     const userAgent = headers['user-agent'] || 'unknown';
-    
+
     // Log request details
     this.logger.log(
-      `Request: ${method} ${url} - IP: ${ip} - User-Agent: ${userAgent}`
+      `Request: ${method} ${url} - IP: ${ip} - User-Agent: ${userAgent}`,
     );
 
     return next.handle().pipe(
@@ -30,16 +30,16 @@ export class LoggingInterceptor implements NestInterceptor {
           const response = context.switchToHttp().getResponse<Response>();
           const delay = Date.now() - now;
           this.logger.log(
-            `Response: ${method} ${url} - ${response.statusCode} - ${delay}ms`
+            `Response: ${method} ${url} - ${response.statusCode} - ${delay}ms`,
           );
         },
         error: (error: Error) => {
           const delay = Date.now() - now;
           this.logger.error(
-            `Error: ${method} ${url} - ${error.message} - ${delay}ms`
+            `Error: ${method} ${url} - ${error.message} - ${delay}ms`,
           );
         },
       }),
     );
   }
-} 
+}

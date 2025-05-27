@@ -23,7 +23,19 @@ export class DestinationGateway {
 
   constructor(
     @InjectRepository(Destination)
-    private readonly destinationRepository: Repository<Destination>, // Inject repositories for related entities if needed for complex operations, // but TypeORM cascades should handle simple creates/updates via the Destination repo.
+    private readonly destinationRepository: Repository<Destination>,
+    @InjectRepository(ItineraryItem)
+    private readonly itineraryItemRepository: Repository<ItineraryItem>,
+    @InjectRepository(Include)
+    private readonly includeRepository: Repository<Include>,
+    @InjectRepository(Exclude)
+    private readonly excludeRepository: Repository<Exclude>,
+    @InjectRepository(Tip)
+    private readonly tipRepository: Repository<Tip>,
+    @InjectRepository(Faq)
+    private readonly faqRepository: Repository<Faq>,
+    @InjectRepository(GalleryImage)
+    private readonly galleryImageRepository: Repository<GalleryImage>,
   ) {}
 
   async create(createDto: CreateDestinationRequestDTO): Promise<Destination> {
@@ -93,20 +105,10 @@ export class DestinationGateway {
     updateDto: UpdateDestinationRequestDTO,
   ): Promise<Destination> {
     this.logger.debug(`Updating destination with ID: ${id}`);
-    // Fetch the existing entity including all relations that might be updated via cascade
-    // This is crucial because TypeORM needs the full entity graph to correctly manage cascades.
+
+    // Verificar que el destino existe
     const existingDestination = await this.destinationRepository.findOne({
       where: { id },
-      relations: [
-        // Include relations that can be updated/replaced
-        'itineraryItems',
-        'itineraryItems.details',
-        'includes',
-        'excludes',
-        'tips',
-        'faqs',
-        'galleryImages',
-      ],
     });
 
     if (!existingDestination) {
@@ -114,60 +116,158 @@ export class DestinationGateway {
       throw new NotFoundException(`Destination with ID ${id} not found`);
     }
 
-    // Merge the update DTO into the loaded entity.
-    // TypeORM's merge is smart but doesn't automatically handle deep relations well
-    // without explicit mapping or careful DTO structure matching entity structure.
-    // For replacing collections (like itineraryItems), assigning the new array from DTO works with cascade.
-    const updatedData = this.destinationRepository.merge(
-      existingDestination,
-      updateDto,
-    );
-
-    // Explicitly handle nested arrays if DTO structure differs or needs transformation
-    // If the DTO provides a complete replacement array for a relation, assign it directly.
-    // TypeORM's cascade on save will handle deleting old items and inserting new ones.
-    if (updateDto.itineraryItems !== undefined) {
-      updatedData.itineraryItems = updateDto.itineraryItems.map((itemDto) => ({
-        ...itemDto, // Spread basic properties
-        // Ensure nested details are also mapped if necessary
-        details: itemDto.details?.map((detailDto) => ({ ...detailDto })) || [],
-      })) as ItineraryItem[]; // Cast might be needed depending on DTO/Entity structure match
-    }
-    if (updateDto.includes !== undefined) {
-      updatedData.includes = updateDto.includes.map((dto) => ({
-        ...dto,
-      })) as Include[];
-    }
-    if (updateDto.excludes !== undefined) {
-      updatedData.excludes = updateDto.excludes.map((dto) => ({
-        ...dto,
-      })) as Exclude[];
-    }
-    if (updateDto.tips !== undefined) {
-      updatedData.tips = updateDto.tips.map((dto) => ({ ...dto })) as Tip[];
-    }
-    if (updateDto.faqs !== undefined) {
-      updatedData.faqs = updateDto.faqs.map((dto) => ({ ...dto })) as Faq[];
-    }
-    if (updateDto.galleryImages !== undefined) {
-      updatedData.galleryImages = updateDto.galleryImages.map((dto) => ({
-        ...dto,
-      })) as GalleryImage[];
-    }
-
     try {
-      // Save the merged entity. TypeORM handles updates and cascades.
-      const savedDestination = await this.destinationRepository.save(
-        updatedData,
+      // Separar campos básicos de relaciones
+      const basicFields = { ...updateDto };
+      const relationFields = {
+        itineraryItems: updateDto.itineraryItems,
+        includes: updateDto.includes,
+        excludes: updateDto.excludes,
+        tips: updateDto.tips,
+        faqs: updateDto.faqs,
+        galleryImages: updateDto.galleryImages,
+      };
+
+      // Eliminar relaciones de los campos básicos
+      delete basicFields.itineraryItems;
+      delete basicFields.includes;
+      delete basicFields.excludes;
+      delete basicFields.tips;
+      delete basicFields.faqs;
+      delete basicFields.galleryImages;
+
+      // 1. Actualizar campos básicos si hay alguno
+      if (Object.keys(basicFields).length > 0) {
+        await this.destinationRepository.update(id, basicFields);
+        this.logger.debug(`Updated basic fields for destination ${id}`);
+      }
+
+      // 2. Manejar relaciones solo si están presentes en el DTO
+      const hasRelationUpdates = Object.values(relationFields).some(
+        (field) => field !== undefined,
       );
+
+      if (hasRelationUpdates) {
+        // Eliminar directamente las relaciones que van a ser actualizadas
+        if (relationFields.itineraryItems !== undefined) {
+          await this.itineraryItemRepository.delete({ destinationId: id });
+        }
+        if (relationFields.includes !== undefined) {
+          await this.includeRepository.delete({ destinationId: id });
+        }
+        if (relationFields.excludes !== undefined) {
+          await this.excludeRepository.delete({ destinationId: id });
+        }
+        if (relationFields.tips !== undefined) {
+          await this.tipRepository.delete({ destinationId: id });
+        }
+        if (relationFields.faqs !== undefined) {
+          await this.faqRepository.delete({ destinationId: id });
+        }
+        if (relationFields.galleryImages !== undefined) {
+          await this.galleryImageRepository.delete({ destinationId: id });
+        }
+
+        // Cargar el destino para agregar las nuevas relaciones
+        const destination = await this.destinationRepository.findOne({
+          where: { id },
+        });
+
+        // Crear las nuevas relaciones
+        if (relationFields.itineraryItems !== undefined) {
+          const newItems = relationFields.itineraryItems.map((itemDto) => {
+            const item = new ItineraryItem();
+            item.destinationId = id;
+            item.day = itemDto.day;
+            item.title = itemDto.title;
+            item.details =
+              itemDto.details?.map((detailDto) => {
+                const detail = new ItineraryDetail();
+                detail.detail = detailDto.detail;
+                return detail;
+              }) || [];
+            return item;
+          });
+          destination.itineraryItems = newItems;
+        }
+
+        if (relationFields.includes !== undefined) {
+          const newIncludes = relationFields.includes.map((dto) => {
+            const include = new Include();
+            include.destinationId = id;
+            include.item = dto.item;
+            return include;
+          });
+          destination.includes = newIncludes;
+        }
+
+        if (relationFields.excludes !== undefined) {
+          const newExcludes = relationFields.excludes.map((dto) => {
+            const exclude = new Exclude();
+            exclude.destinationId = id;
+            exclude.item = dto.item;
+            return exclude;
+          });
+          destination.excludes = newExcludes;
+        }
+
+        if (relationFields.tips !== undefined) {
+          const newTips = relationFields.tips.map((dto) => {
+            const tip = new Tip();
+            tip.destinationId = id;
+            tip.tip = dto.tip;
+            return tip;
+          });
+          destination.tips = newTips;
+        }
+
+        if (relationFields.faqs !== undefined) {
+          const newFaqs = relationFields.faqs.map((dto) => {
+            const faq = new Faq();
+            faq.destinationId = id;
+            faq.question = dto.question;
+            faq.answer = dto.answer;
+            return faq;
+          });
+          destination.faqs = newFaqs;
+        }
+
+        if (relationFields.galleryImages !== undefined) {
+          const newImages = relationFields.galleryImages.map((dto) => {
+            const image = new GalleryImage();
+            image.destinationId = id;
+            image.imageUrl = dto.imageUrl;
+            return image;
+          });
+          destination.galleryImages = newImages;
+        }
+
+        // Guardar las nuevas relaciones
+        await this.destinationRepository.save(destination);
+        this.logger.debug(`Updated relations for destination ${id}`);
+      }
+
+      // 3. Retornar el destino actualizado con todas las relaciones
+      const updatedDestination = await this.destinationRepository.findOne({
+        where: { id },
+        relations: [
+          'itineraryItems',
+          'itineraryItems.details',
+          'includes',
+          'excludes',
+          'tips',
+          'faqs',
+          'galleryImages',
+        ],
+      });
+
       this.logger.log(`Successfully updated destination with ID: ${id}`);
-      return savedDestination;
+      return updatedDestination;
     } catch (error) {
       this.logger.error(
         `Error updating destination with ID ${id}: ${error.message}`,
         error.stack,
       );
-      // Consider throwing a more specific DB error or custom exception
       throw error;
     }
   }

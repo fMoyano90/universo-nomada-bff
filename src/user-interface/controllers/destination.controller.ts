@@ -11,6 +11,7 @@ import {
   Param,
   ParseIntPipe,
   Put,
+  Patch, // Added Patch
   Delete,
   Get, // Added Get
   ParseEnumPipe, // Added ParseEnumPipe
@@ -67,6 +68,29 @@ export class DestinationController {
     private readonly getDestinationByIdInteractor: GetDestinationByIdInteractor,
     private readonly getAllPaginatedDestinationsInteractor: GetAllPaginatedDestinationsInteractor, // <- NUEVO INTERACTOR INYECTADO
   ) {}
+
+  // Método auxiliar para extraer existingGalleryImages del rawBody
+  private extractExistingGalleryImages(
+    rawBody: any,
+  ): { imageUrl: string }[] | undefined {
+    const existingImages: { imageUrl: string }[] = [];
+
+    // Buscar campos que coincidan con el patrón existingGalleryImages[index][imageUrl]
+    for (const key in rawBody) {
+      const match = key.match(/^existingGalleryImages\[(\d+)\]\[imageUrl\]$/);
+      if (match) {
+        const index = parseInt(match[1], 10);
+        const imageUrl = rawBody[key];
+        if (typeof imageUrl === 'string' && imageUrl.trim() !== '') {
+          existingImages[index] = { imageUrl: imageUrl.trim() };
+        }
+      }
+    }
+
+    // Filtrar elementos undefined y devolver solo si hay imágenes válidas
+    const validImages = existingImages.filter((img) => img && img.imageUrl);
+    return validImages.length > 0 ? validImages : undefined;
+  }
 
   @Post()
   @ApiBearerAuth() // Requires auth
@@ -140,13 +164,13 @@ export class DestinationController {
     return responseDto;
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiBearerAuth() // Requires auth
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: 'Update an existing destination' })
+  @ApiOperation({ summary: 'Partially update an existing destination' })
   @ApiParam({ name: 'id', description: 'Destination ID', type: 'number' })
   @UseInterceptors(
     FileFieldsInterceptor([
@@ -204,6 +228,12 @@ export class DestinationController {
         `[CONTROLLER UPDATE] Corrigiendo isSpecial a: ${shouldBeTrue}`,
       );
     }
+
+    // Extraer existingGalleryImages del rawBody si existe
+    const existingGalleryImages = this.extractExistingGalleryImages(rawBody);
+
+    // Verificar si se quiere limpiar la galería completamente
+    const clearGallery = rawBody.clearGallery === 'true';
 
     const imageSrcFile = files.imageSrc?.[0];
     const galleryImageFiles = files.galleryImages || [];

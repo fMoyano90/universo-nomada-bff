@@ -310,7 +310,24 @@ export class CreateDestinationRequestDTO {
 // Use PartialType to make all properties of CreateDestinationRequestDTO optional
 export class UpdateDestinationRequestDTO extends PartialType(
   CreateDestinationRequestDTO,
-) {}
+) {
+  @ApiPropertyOptional({
+    type: [GalleryImageDTO],
+    description: 'List of existing gallery image URLs to keep',
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @IsOptional()
+  @Type(() => GalleryImageDTO)
+  existingGalleryImages?: GalleryImageDTO[];
+
+  @ApiPropertyOptional({
+    description: 'Flag to clear all gallery images',
+  })
+  @IsString()
+  @IsOptional()
+  clearGallery?: string;
+}
 
 // --- Response DTO (Example - adjust as needed) ---
 // You might want a specific response DTO after creation
