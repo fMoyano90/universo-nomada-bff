@@ -124,6 +124,7 @@ export class DatabaseBookingGateway implements BookingGateway {
       numPeople: booking.numPeople,
       totalPrice: Number(booking.totalPrice),
       specialRequests: booking.specialRequests,
+      needsFlight: booking.needsFlight || false,
       createdAt: booking.createdAt,
       updatedAt: booking.updatedAt,
       participants:

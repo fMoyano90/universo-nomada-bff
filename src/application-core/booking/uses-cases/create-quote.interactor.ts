@@ -91,6 +91,7 @@ export class CreateQuoteInteractor {
       numPeople: totalPeople,
       totalPrice: 0, // El precio se determina posteriormente por el admin
       specialRequests: this.buildSpecialRequestsString(createQuoteDto),
+      needsFlight: createQuoteDto.needsFlight || false,
     });
 
     return this.bookingGateway.findById(newQuote.id);

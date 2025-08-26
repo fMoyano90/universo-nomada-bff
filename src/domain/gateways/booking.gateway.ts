@@ -17,6 +17,7 @@ export interface CreateBookingData {
   numPeople: number;
   totalPrice: number;
   specialRequests?: string;
+  needsFlight?: boolean;
 }
 
 export interface CreateBookingParticipantData {

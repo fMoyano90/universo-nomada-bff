@@ -81,6 +81,9 @@ export class Booking {
   @Column({ name: 'special_requests', type: 'text', nullable: true })
   specialRequests?: string;
 
+  @Column({ name: 'needs_flight', type: 'boolean', default: false })
+  needsFlight: boolean;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

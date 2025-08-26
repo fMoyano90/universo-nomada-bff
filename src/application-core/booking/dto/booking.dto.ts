@@ -101,6 +101,15 @@ export class UpdateBookingDTO {
   @IsString()
   @IsOptional()
   specialRequests?: string;
+
+  @ApiProperty({
+    description: 'Si necesita vuelo',
+    example: false,
+    required: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  needsFlight?: boolean;
 }
 
 export class BookingFiltersDTO {
@@ -153,6 +162,9 @@ export class BookingResponseDTO {
 
   @ApiProperty({ required: false })
   specialRequests?: string;
+
+  @ApiProperty({ required: false })
+  needsFlight: boolean;
 
   @ApiProperty()
   createdAt: Date;
@@ -329,6 +341,15 @@ export class CreateQuoteDTO {
   @IsBoolean()
   @IsNotEmpty()
   needsAccommodation: boolean;
+
+  @ApiProperty({
+    description: 'Si necesita vuelo',
+    example: false,
+    required: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  needsFlight?: boolean;
 
   @ApiProperty({
     description: 'Requisitos especiales',
